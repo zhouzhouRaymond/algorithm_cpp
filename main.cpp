@@ -17,7 +17,6 @@ std::vector<int> select_sort(std::vector<int> num) {
 // find the min_index from the unsorted part
     for (int iter = min; iter < num_size; ++iter)
       iter_min = num[iter_min] > num[iter] ? iter : iter_min;
-
 // change
     std::swap(num[min], num[iter_min]);
   }
@@ -37,7 +36,7 @@ std::vector<int> insert_sort(std::vector<int> num) {
 }
 
 std::vector<int> shell_sort(std::vector<int> num) {
-  int h = 1, num_size = static_cast<int>(num.size());;
+  int h = 1, num_size = static_cast<int>(num.size());
   while (h < num_size / 3) h = 3 * h + 1;
   for (; h >= 1; h /= 3)
 // h-sorted
@@ -51,7 +50,7 @@ std::vector<int> shell_sort(std::vector<int> num) {
 }
 
 // the index is [low, high)
-void __merge(std::vector<int> &num, int low, int middle, int high) {
+void _merge(std::vector<int> &num, int low, int middle, int high) {
   if (num[middle] <= num[middle + 1]) return;
   std::vector<int> ret;
   int start = low, ret_middle = middle++;
@@ -74,25 +73,25 @@ void merge_high_to_low(std::vector<int> &num, int low, int high) {
   merge_high_to_low(num, low, middle);
   merge_high_to_low(num, middle + 1, high);
 // merge into num
-  __merge(num, low, middle, high);
+  _merge(num, low, middle, high);
 }
 
 void merge_low_to_high(std::vector<int> &num) {
   int N = num.size();
   for (int sz = 2; sz <= N; sz *= 2)
     for (int iter = 0; iter + sz - 1 < N; iter += sz)
-      __merge(num, iter, iter + sz / 2 - 1, iter + sz - 1);
+      _merge(num, iter, iter + sz / 2 - 1, iter + sz - 1);
 
   num = insert_sort(num);
 }
 
-int __inverse_pairs(std::vector<int> &num, int low, int high) {
+int _inverse_pairs(std::vector<int> &num, int low, int high) {
   if (low == high) return 0;
   int ret = 0;
   int middle = low + (high - low) / 2;
 
-  ret += __inverse_pairs(num, low, middle);
-  ret += __inverse_pairs(num, middle + 1, high);
+  ret += _inverse_pairs(num, low, middle);
+  ret += _inverse_pairs(num, middle + 1, high);
 
   for (int left = middle, right = high; left >= low && high > middle;) {
     if (num[left] > num[right]) {
@@ -101,19 +100,19 @@ int __inverse_pairs(std::vector<int> &num, int low, int high) {
     } else if (num[left] < num[right]) --right;
     else if (num[left] == num[right]) break;
   }
-  __merge(num, low, middle, high);
+  _merge(num, low, middle, high);
   return ret;
 }
 
 int inverse_pairs(std::vector<int> num) {
-  return __inverse_pairs(num, 0, static_cast<int>(num.size()) - 1);
+  return _inverse_pairs(num, 0, static_cast<int>(num.size()) - 1);
 }
 
-int __reverse_pairs_important(std::vector<int> &num, int low, int high) {
+int _reverse_pairs_important(std::vector<int> &num, int low, int high) {
   if (low >= high) return 0;
   int ret = 0, middle = (high - low) / 2 + low;
-  ret += __reverse_pairs_important(num, low, middle);
-  ret += __reverse_pairs_important(num, middle + 1, high);
+  ret += _reverse_pairs_important(num, low, middle);
+  ret += _reverse_pairs_important(num, middle + 1, high);
 
 // 统计重要逆序对
   for (int iter_low = low, iter_high = middle + 1;
@@ -123,20 +122,20 @@ int __reverse_pairs_important(std::vector<int> &num, int low, int high) {
       ++iter_high;
     ret += iter_high - (middle + 1);
   }
-  __merge(num, low, middle, high);
+  _merge(num, low, middle, high);
   return ret;
 }
 
 int inverse_pairs_important(std::vector<int> num) {
-  return __reverse_pairs_important(num, 0, static_cast<int>(num.size()) - 1);
+  return _reverse_pairs_important(num, 0, static_cast<int>(num.size()) - 1);
 }
 
-int __partition(std::vector<int> &num, int low, int high) {
+int _partition(std::vector<int> &num, int low, int high) {
 
   int iter_low = low, iter_high = high;
   while (iter_low != iter_high) {
-    for (; num[iter_low] <= num[low] && iter_low < high; ++iter_low) {};
-    for (; num[iter_high] >= num[low] && iter_high > low; --iter_high) {};
+    for (; num[iter_low] <= num[low] && iter_low < high; ++iter_low);
+    for (; num[iter_high] >= num[low] && iter_high > low; --iter_high);
     if (iter_low > iter_high) break;
     std::swap(num[iter_low], num[iter_high]);
   }
@@ -147,12 +146,12 @@ int __partition(std::vector<int> &num, int low, int high) {
 void quick_sort(std::vector<int> &num, int low, int high) {
   if (low >= high) return;
 
-  int partition = __partition(num, low, high);
+  int partition = _partition(num, low, high);
   quick_sort(num, low, partition - 1);
   quick_sort(num, partition + 1, high);
 }
 
-void __swim(std::vector<int> &num, int low, int high) {
+void _swim(std::vector<int> &num, int low, int high) {
   // only change the left item
   for (; high / 2 >= low && num[high / 2] < num[high]; high /= 2) {
     int iter_change = 0;
@@ -163,7 +162,7 @@ void __swim(std::vector<int> &num, int low, int high) {
   }
 }
 
-void __sink(std::vector<int> &num, int low, int high) {
+void _sink(std::vector<int> &num, int low, int high) {
   while (2 * low + 1 <= high) {
     int iter = 2 * low + 1;
     if (iter < high && num[iter] < num[iter + 1]) ++iter;
@@ -176,22 +175,22 @@ void __sink(std::vector<int> &num, int low, int high) {
 void heap_sort_swim(std::vector<int> &num) {
   int N = static_cast<int>(num.size()) - 1;
   for (int iter = (static_cast<int>(num.size()) - 1) / 2; iter > 0; --iter)
-    __sink(num, iter, N);
+    _sink(num, iter, N);
 
   for (int iter = 0; iter < N;) {
     std::swap(num[iter], num[N]);
-    __swim(num, ++iter, N);
+    _swim(num, ++iter, N);
   }
 }
 
 void heap_sort_sink(std::vector<int> &num) {
   int num_size = static_cast<int>(num.size()) - 1;
   for (int iter = num_size / 2; iter > 0; --iter)
-    __sink(num, iter, num_size);
+    _sink(num, iter, num_size);
 
   for (int iter = num_size; iter > 0;) {
     std::swap(num[iter], num[0]);
-    __sink(num, 0, --iter);
+    _sink(num, 0, --iter);
   }
 }
 
@@ -219,7 +218,7 @@ int select_index(std::vector<int> num, int k) {
   k = k - 1;
   int low = 0, high = static_cast<int>(num.size()) - 1;
   while (low < high) {
-    int iter = __partition(num, low, high);
+    int iter = _partition(num, low, high);
     if (iter == k) return num[k];
     else if (iter > k) high = iter - 1;
     else if (iter < k) low = iter + 1;
