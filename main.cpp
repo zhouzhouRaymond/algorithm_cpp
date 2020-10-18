@@ -30,7 +30,7 @@ std::vector<int> insert_sort(std::vector<int> num) {
 // find the insert position
     for (; iter_min <= iter && num[iter_min] <= num[iter]; ++iter_min);
 // move for current position
-    for (; iter_min < iter; std::swap(num[iter_min], num[iter]), ++iter_min);
+    for (; iter_min < iter; ++iter_min) std::swap(num[iter_min], num[iter]);
   }
   return num;
 }
@@ -61,9 +61,9 @@ void _merge(std::vector<int> &num, int low, int middle, int high) {
   for (; low <= ret_middle; ++low) ret.push_back(num[low]);
   for (; middle <= high; ++middle) ret.push_back(num[middle]);
 
-  std::for_each(ret.begin(),
-                ret.end(),
-                [&start, &num](int &val) { num[start++] = val; });
+  (void) std::for_each(ret.begin(),
+                       ret.end(),
+                       [&start, &num](int &val) { num[start++] = val; });
 }
 
 // the index is [low, high]
@@ -98,7 +98,7 @@ int _inverse_pairs(std::vector<int> &num, int low, int high) {
       ret += right - middle;
       --left;
     } else if (num[left] < num[right]) --right;
-    else if (num[left] == num[right]) break;
+    else break;
   }
   _merge(num, low, middle, high);
   return ret;
@@ -221,7 +221,7 @@ int select_index(std::vector<int> num, int k) {
     int iter = _partition(num, low, high);
     if (iter == k) return num[k];
     else if (iter > k) high = iter - 1;
-    else if (iter < k) low = iter + 1;
+    else low = iter + 1;
   }
   return num[k];
 }
@@ -313,7 +313,8 @@ int binary_search_for(const std::vector<int> &num, const int &val) {
 namespace test {
 void test_search() {
   std::vector<int> num{1, 2, 3, 4, 5, 6, 7};
-  std::cout << binary_search(num, 7, 0, (int) num.size() - 1) << std::endl;
+  std::cout << binary_search(num, 7, 0, static_cast<int>(num.size()) - 1)
+            << std::endl;
   std::cout << binary_search_for(num, 7) << std::endl;
 }
 } // namespace of test
@@ -561,7 +562,7 @@ void rb_tree::dfs() {
   std::stack<rb_avl_tree_base *> stack;
   stack.push(_root);
 
-  while (stack.empty() == false) {
+  while (!stack.empty()) {
     auto curr_node = stack.top();
     std::cout << "  " << stack.top()->val << " | "
               << (stack.top()->color == _rb_tree_color::_red ? "red" : "black")
@@ -621,7 +622,7 @@ class tree_avl {
   avl_tree_base *_root;
 };
 
-tree_avl::tree_avl() : _root(nullptr) {};
+tree_avl::tree_avl() : _root(nullptr) {}
 tree_avl::tree_avl(avl_tree_base *root) : _root(root) {}
 
 void tree_avl::insert_node(avl_tree_base *node) {
@@ -651,6 +652,7 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
     // 更新平衡因子
     if (p->left == iter) --p->balance_factor;
     else if (p->right == iter) ++p->balance_factor;
+    else break;
 
     // 检查平衡因子
     if (p->balance_factor == 0) break;
@@ -664,7 +666,7 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
       } else if (p->balance_factor == -2) {
         if (iter->balance_factor == -1) _rotate_ll(p);
         else _rotate_lr(p);
-      }
+      }else break;
       break;
     }
   }
