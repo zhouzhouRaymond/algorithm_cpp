@@ -705,7 +705,7 @@ int tree_avl::get_height() {
 }
 
 int tree_avl::_get_height(avl_tree_base *node) {
-  if(node == nullptr) return 0;
+  if (node == nullptr) return 0;
   return std::max(_get_height(node->left), _get_height(node->right)) + 1;
 }
 
