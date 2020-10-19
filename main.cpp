@@ -575,6 +575,7 @@ void rb_tree::dfs() {
 
 class avl_tree_base {
  public:
+  // 平衡因子：左子树 减 右子树
   int val, balance_factor;
   avl_tree_base *parent, *left, *right;
 
@@ -650,8 +651,8 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
   avl_tree_base *p = node->parent, *iter = node;
   while (p) {
     // 更新平衡因子
-    if (p->left == iter) --p->balance_factor;
-    else if (p->right == iter) ++p->balance_factor;
+    if (p->left == iter) ++p->balance_factor;
+    else if (p->right == iter) --p->balance_factor;
     else break;
 
     // 检查平衡因子
@@ -661,11 +662,11 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
       p = p->parent;
     } else {
       if (p->balance_factor == 2) {
-        if (iter->balance_factor == 1) _rotate_rr(p);
-        else _rotate_rl(p);
-      } else if (p->balance_factor == -2) {
-        if (iter->balance_factor == -1) _rotate_ll(p);
+        if (iter->balance_factor == 1) _rotate_ll(p);
         else _rotate_lr(p);
+      } else if (p->balance_factor == -2) {
+        if (iter->balance_factor == -1) _rotate_rr(p);
+        else _rotate_rl(p);
       } else break;
       break;
     }
@@ -687,7 +688,11 @@ void tree_avl::_delete_fixup(avl_tree_base *node) {
 }
 
 void tree_avl::_rotate_rr(avl_tree_base *node) {
-
+  if (node->parent == nullptr) {
+    // 如果当前节点为根节点
+  } else {
+    
+  }
 }
 
 void tree_avl::_rotate_rl(avl_tree_base *node) {
@@ -695,16 +700,39 @@ void tree_avl::_rotate_rl(avl_tree_base *node) {
 }
 
 void tree_avl::_rotate_ll(avl_tree_base *node) {
+  if (node->parent == nullptr) {
+    // 如果当前节点为根节点
+    _root = node->left;
+    node->left = _root->right;
+    _root->right = node;
+    node->parent = _root;
+    _root->parent = nullptr;
+  } else {
+    auto tmp = node->left;
+    if (node->parent->left == node) {
+      // 当前节点为父节点的左节点
+      node->parent->left = tmp;
+    } else {
+      // 当前节点为父节点的右节点
+      node->parent->right = tmp;
+    }
+    tmp->parent = node->parent;
+    node->left = tmp->right;
+    node->parent = tmp;
+    tmp->right = node;
 
+  }
+  // 更新平衡因子
+  node->balance_factor = 0;
+  node->parent->balance_factor = 0;
+  node->parent->left->balance_factor = 0;
 }
 
 void tree_avl::_rotate_lr(avl_tree_base *node) {
 
 }
 
-int tree_avl::get_height() {
-  return _get_height(_root);
-}
+int tree_avl::get_height() { return _get_height(_root); }
 
 int tree_avl::_get_height(avl_tree_base *node) {
   if (node == nullptr) return 0;
@@ -763,7 +791,7 @@ void test_rb_tree() {
 
 void test_avl_tree() {
   auto *new_tree = new tree_avl();
-  for (int iter = 0; iter < 10; ++iter) new_tree->insert_val(iter);
+  for (int iter = 10; iter > 0; --iter) new_tree->insert_val(iter);
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
