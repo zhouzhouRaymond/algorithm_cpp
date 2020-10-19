@@ -771,7 +771,7 @@ void test_avl_tree() {
   std::cout << "in order: " << std::endl;
   new_tree->in_order();
 
-  std::cout << new_tree->get_height() << std::endl;
+  std::cout << "avl_tree height: " << new_tree->get_height() << std::endl;
 }
 } // namespace of test
 } // namespace of tiny_rb_tree

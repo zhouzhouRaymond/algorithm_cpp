@@ -7,4 +7,4 @@ include_directories(include)
 
 add_executable(algorithm_cpp main.cpp)
 
-add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g -O2)
+add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g -O3)
