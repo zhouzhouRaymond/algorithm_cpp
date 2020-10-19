@@ -668,7 +668,7 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
         if (iter->balance_factor == -1) _rotate_rr(p);
         else _rotate_rl(p);
       } else break;
-      break;
+//      break;
     }
   }
 }
@@ -690,8 +690,13 @@ void tree_avl::_delete_fixup(avl_tree_base *node) {
 void tree_avl::_rotate_rr(avl_tree_base *node) {
   if (node->parent == nullptr) {
     // 如果当前节点为根节点
+    _root = node->right;
+    _root->parent = nullptr;
+    node->right = _root->left;
+    _root->left = node;
+    node->parent = _root;
   } else {
-    
+
   }
 }
 
@@ -709,23 +714,23 @@ void tree_avl::_rotate_ll(avl_tree_base *node) {
     _root->parent = nullptr;
   } else {
     auto tmp = node->left;
-    if (node->parent->left == node) {
+    if (node->parent->left == node)
       // 当前节点为父节点的左节点
       node->parent->left = tmp;
-    } else {
+    else
       // 当前节点为父节点的右节点
       node->parent->right = tmp;
-    }
+
     tmp->parent = node->parent;
     node->left = tmp->right;
     node->parent = tmp;
     tmp->right = node;
-
   }
   // 更新平衡因子
-  node->balance_factor = 0;
-  node->parent->balance_factor = 0;
-  node->parent->left->balance_factor = 0;
+//  node->balance_factor = _get_height(node->left) - _get_height(node->right);
+//  auto tmp = node->parent->left;
+//  tmp->balance_factor = _get_height(tmp->left) - _get_height(tmp->right);
+//  node->parent->balance_factor = tmp->balance_factor - node->balance_factor;
 }
 
 void tree_avl::_rotate_lr(avl_tree_base *node) {
@@ -755,7 +760,7 @@ void tree_avl::post_order() { _post_order(_root); }
 
 void tree_avl::_pre_order(avl_tree_base *node) {
   if (node == nullptr) return;
-  std::cout << "  " << node->val << std::endl;
+  std::cout << "  " << node->val << " | " << node->balance_factor << std::endl;
   _pre_order(node->left);
   _pre_order(node->right);
 }
@@ -763,7 +768,7 @@ void tree_avl::_pre_order(avl_tree_base *node) {
 void tree_avl::_in_order(avl_tree_base *node) {
   if (node == nullptr) return;
   _in_order(node->left);
-  std::cout << "  " << node->val << std::endl;
+  std::cout << "  " << node->val << " | " << node->balance_factor << std::endl;
   _in_order(node->right);
 }
 
@@ -771,7 +776,7 @@ void tree_avl::_post_order(avl_tree_base *node) {
   if (node == nullptr) return;
   _post_order(node->left);
   _post_order(node->right);
-  std::cout << "  " << node->val << std::endl;
+  std::cout << "  " << node->val << " | " << node->balance_factor << std::endl;
 }
 
 namespace test {
@@ -791,7 +796,7 @@ void test_rb_tree() {
 
 void test_avl_tree() {
   auto *new_tree = new tree_avl();
-  for (int iter = 10; iter > 0; --iter) new_tree->insert_val(iter);
+  for (int iter = 0; iter < 10; ++iter) new_tree->insert_val(iter);
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
