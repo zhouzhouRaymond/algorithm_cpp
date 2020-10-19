@@ -666,7 +666,7 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
       } else if (p->balance_factor == -2) {
         if (iter->balance_factor == -1) _rotate_ll(p);
         else _rotate_lr(p);
-      }else break;
+      } else break;
       break;
     }
   }
