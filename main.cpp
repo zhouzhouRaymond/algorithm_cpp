@@ -615,7 +615,7 @@ class tree_avl {
 
   int _get_height(avl_tree_base *node);
 
-  int _update_bf(avl_tree_base *node);
+  void _update_bf(avl_tree_base *node);
 
   void _pre_order(avl_tree_base *node);
   void _in_order(avl_tree_base *node);
@@ -645,9 +645,7 @@ void tree_avl::insert_node(avl_tree_base *node) {
   _insert_fixup(node);
 }
 
-void tree_avl::insert_val(int val) {
-  insert_node(new avl_tree_base(val));
-}
+void tree_avl::insert_val(int val) { insert_node(new avl_tree_base(val)); }
 
 void tree_avl::_insert_fixup(avl_tree_base *node) {
   avl_tree_base *p = node->parent, *iter = node;
@@ -678,7 +676,7 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
   }
 }
 
-// todo: 功能实现
+// todo:
 void tree_avl::delete_node(avl_tree_base *node) {
   if (node == nullptr) return;
 
@@ -789,17 +787,11 @@ avl_tree_base *tree_avl::_rotate_lr(avl_tree_base *node) {
   return ret;
 }
 
-int tree_avl::_update_bf(avl_tree_base *node) {
-  if (node == nullptr) return 0;
-  else if (node->left != nullptr && node->right == nullptr)
-    node->balance_factor = _update_bf(node->left) + 1;
-  else if (node->right != nullptr && node->left == nullptr)
-    node->balance_factor = -_update_bf(node->right) - 1;
-  else if (node->left == nullptr && node->right == nullptr)
-    node->balance_factor = 0;
+// todo:
+void tree_avl::_update_bf(avl_tree_base *node) {
+  if (node == nullptr) return;
   else
-    node->balance_factor = _update_bf(node->left) - _update_bf(node->right);
-
+    node->balance_factor = _get_height(node->left) - _get_height(node->right);
 //  if (node->left == nullptr && node->right != nullptr)
 //    node->balance_factor = -std::abs(node->right->balance_factor) - 1;
 //  else if (node->right == nullptr && node->left != nullptr)
