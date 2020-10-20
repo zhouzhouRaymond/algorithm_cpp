@@ -608,12 +608,14 @@ class tree_avl {
   void _insert_fixup(avl_tree_base *node);
   void _delete_fixup(avl_tree_base *node);
 
-  void _rotate_ll(avl_tree_base *node);
-  void _rotate_rl(avl_tree_base *node);
-  void _rotate_rr(avl_tree_base *node);
-  void _rotate_lr(avl_tree_base *node);
+  avl_tree_base *_rotate_ll(avl_tree_base *node);
+  avl_tree_base *_rotate_rl(avl_tree_base *node);
+  avl_tree_base *_rotate_rr(avl_tree_base *node);
+  avl_tree_base *_rotate_lr(avl_tree_base *node);
 
   int _get_height(avl_tree_base *node);
+
+  int _update_bf(avl_tree_base *node);
 
   void _pre_order(avl_tree_base *node);
   void _in_order(avl_tree_base *node);
@@ -656,19 +658,22 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
     else break;
 
     // 检查平衡因子
+    avl_tree_base *tmp = nullptr;
     if (p->balance_factor == 0) break;
     else if (p->balance_factor == -1 || p->balance_factor == 1) {
       iter = p;
       p = p->parent;
     } else {
       if (p->balance_factor == 2) {
-        if (iter->balance_factor == 1) _rotate_ll(p);
-        else _rotate_lr(p);
+        if (iter->balance_factor == 1) tmp = _rotate_ll(p);
+        else tmp = _rotate_lr(p);
       } else if (p->balance_factor == -2) {
-        if (iter->balance_factor == -1) _rotate_rr(p);
-        else _rotate_rl(p);
+        if (iter->balance_factor == -1) tmp = _rotate_rr(p);
+        else tmp = _rotate_rl(p);
       } else break;
-//      break;
+
+      // 更新修改后的平衡因子
+      _update_bf(tmp);
     }
   }
 }
@@ -687,54 +692,123 @@ void tree_avl::_delete_fixup(avl_tree_base *node) {
 
 }
 
-void tree_avl::_rotate_rr(avl_tree_base *node) {
+avl_tree_base *tree_avl::_rotate_rr(avl_tree_base *node) {
+  avl_tree_base *ret = nullptr;
   if (node->parent == nullptr) {
     // 如果当前节点为根节点
     _root = node->right;
-    _root->parent = nullptr;
-    node->right = _root->left;
-    _root->left = node;
-    node->parent = _root;
+    ret = _root;
   } else {
-
+    ret = node->right;
+    if (node->parent->left == node) node->parent->left = ret;
+    else node->parent->right = ret;
   }
+
+  ret->parent = node->parent;
+  node->parent = ret;
+  node->right = ret->left;
+  ret->left = node;
+  return ret;
 }
 
-void tree_avl::_rotate_rl(avl_tree_base *node) {
+avl_tree_base *tree_avl::_rotate_rl(avl_tree_base *node) {
+  avl_tree_base *ret = nullptr;
 
+  if (node->parent == nullptr) {
+    // 如果当前节点为根节点
+    _root = node->right->left;
+    ret = _root;
+  } else {
+    ret = node->right->left;
+    if (node->parent->right == node) node->parent->right = ret;
+    else node->parent->left = ret;
+  }
+
+  auto tmp = node->right;
+
+  ret->parent = node->parent;
+
+  node->parent = ret;
+  node->right = ret->left;
+
+  tmp->parent = ret;
+  tmp->left = ret->right;
+
+  ret->left = node;
+  ret->right = tmp;
+
+  return ret;
 }
 
-void tree_avl::_rotate_ll(avl_tree_base *node) {
+avl_tree_base *tree_avl::_rotate_ll(avl_tree_base *node) {
+  avl_tree_base *ret = nullptr;
   if (node->parent == nullptr) {
     // 如果当前节点为根节点
     _root = node->left;
-    node->left = _root->right;
-    _root->right = node;
-    node->parent = _root;
-    _root->parent = nullptr;
+    ret = _root;
   } else {
-    auto tmp = node->left;
-    if (node->parent->left == node)
-      // 当前节点为父节点的左节点
-      node->parent->left = tmp;
-    else
-      // 当前节点为父节点的右节点
-      node->parent->right = tmp;
-
-    tmp->parent = node->parent;
-    node->left = tmp->right;
-    node->parent = tmp;
-    tmp->right = node;
+    ret = node->left;
+    if (node->parent->left == node) node->parent->left = ret; // 当前节点为父节点的左节点
+    else node->parent->right = ret; // 当前节点为父节点的右节点
   }
-  // 更新平衡因子
-//  node->balance_factor = _get_height(node->left) - _get_height(node->right);
-//  auto tmp = node->parent->left;
-//  tmp->balance_factor = _get_height(tmp->left) - _get_height(tmp->right);
-//  node->parent->balance_factor = tmp->balance_factor - node->balance_factor;
+
+  ret->parent = node->parent;
+  node->left = ret->right;
+  node->parent = ret;
+  ret->right = node;
+
+  return ret;
 }
 
-void tree_avl::_rotate_lr(avl_tree_base *node) {
+avl_tree_base *tree_avl::_rotate_lr(avl_tree_base *node) {
+  avl_tree_base *ret = nullptr;
 
+  if (node->parent == nullptr) {
+    // 如果当前节点为根节点
+    _root = node->left->right;
+    ret = _root;
+  } else {
+    ret = node->left->right;
+    if (node->parent->right == node) node->parent->right = ret;
+    else node->parent->left = node;
+  }
+
+  auto tmp = node->left;
+
+  ret->parent = node->parent;
+
+  node->parent = ret;
+  node->left = ret->right;
+
+  tmp->parent = ret;
+  tmp->right = ret->left;
+
+  ret->left = tmp;
+  ret->right = node;
+
+  return ret;
+}
+
+int tree_avl::_update_bf(avl_tree_base *node) {
+  if (node == nullptr) return 0;
+  else if (node->left != nullptr && node->right == nullptr)
+    node->balance_factor = _update_bf(node->left) + 1;
+  else if (node->right != nullptr && node->left == nullptr)
+    node->balance_factor = -_update_bf(node->right) - 1;
+  else if (node->left == nullptr && node->right == nullptr)
+    node->balance_factor = 0;
+  else
+    node->balance_factor = _update_bf(node->left) - _update_bf(node->right);
+
+//  if (node->left == nullptr && node->right != nullptr)
+//    node->balance_factor = -std::abs(node->right->balance_factor) - 1;
+//  else if (node->right == nullptr && node->left != nullptr)
+//    node->balance_factor = std::abs(node->left->balance_factor) + 1;
+//  else if (node->left == nullptr && node->right == nullptr)
+//    node->balance_factor = 0;
+//  else
+//    node->balance_factor = std::abs(node->left->balance_factor) -
+//        std::abs(node->right->balance_factor);
 }
 
 int tree_avl::get_height() { return _get_height(_root); }
@@ -795,12 +869,17 @@ void test_rb_tree() {
 }
 
 void test_avl_tree() {
+  std::vector<int> nums{16, 3, 7, 11, 9, 26, 18, 14, 15};
   auto *new_tree = new tree_avl();
-  for (int iter = 0; iter < 10; ++iter) new_tree->insert_val(iter);
+  std::cout << "insert node: ";
+  for (int num : nums) {
+    new_tree->insert_val(num);
+    std::cout << num << " ";
+  }
+  std::cout << std::endl;
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
-
   std::cout << "in order: " << std::endl;
   new_tree->in_order();
 
