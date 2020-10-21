@@ -628,6 +628,8 @@ class tree_avl {
 tree_avl::tree_avl() : _root(nullptr) {}
 tree_avl::tree_avl(avl_tree_base *root) : _root(root) {}
 
+void tree_avl::insert_val(int val) { insert_node(new avl_tree_base(val)); }
+
 void tree_avl::insert_node(avl_tree_base *node) {
   avl_tree_base *iter = _root, *p = nullptr;
 
@@ -644,8 +646,6 @@ void tree_avl::insert_node(avl_tree_base *node) {
   }
   _insert_fixup(node);
 }
-
-void tree_avl::insert_val(int val) { insert_node(new avl_tree_base(val)); }
 
 void tree_avl::_insert_fixup(avl_tree_base *node) {
   avl_tree_base *p = node->parent, *iter = node;
@@ -669,9 +669,6 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
         if (iter->balance_factor == -1) tmp = _rotate_rr(p);
         else tmp = _rotate_rl(p);
       } else break;
-
-      // 更新修改后的平衡因子
-      _update_bf(tmp);
     }
   }
 }
@@ -679,14 +676,6 @@ void tree_avl::_insert_fixup(avl_tree_base *node) {
 // todo:
 void tree_avl::delete_node(avl_tree_base *node) {
   if (node == nullptr) return;
-
-}
-
-void tree_avl::delete_val(int val) {
-  delete_node(search_val(val));
-}
-
-void tree_avl::_delete_fixup(avl_tree_base *node) {
 
 }
 
@@ -706,7 +695,11 @@ avl_tree_base *tree_avl::_rotate_rr(avl_tree_base *node) {
   node->parent = ret;
   node->right = ret->left;
   ret->left = node;
-  return ret;
+
+  // 更正平衡因子
+  _update_bf(ret);
+
+  return ret->right;
 }
 
 avl_tree_base *tree_avl::_rotate_rl(avl_tree_base *node) {
@@ -735,6 +728,9 @@ avl_tree_base *tree_avl::_rotate_rl(avl_tree_base *node) {
   ret->left = node;
   ret->right = tmp;
 
+  // 更正平衡因子
+  _update_bf(ret);
+
   return ret;
 }
 
@@ -755,7 +751,10 @@ avl_tree_base *tree_avl::_rotate_ll(avl_tree_base *node) {
   node->parent = ret;
   ret->right = node;
 
-  return ret;
+  // 更正平衡因子
+  _update_bf(ret);
+
+  return ret->left;
 }
 
 avl_tree_base *tree_avl::_rotate_lr(avl_tree_base *node) {
@@ -768,7 +767,7 @@ avl_tree_base *tree_avl::_rotate_lr(avl_tree_base *node) {
   } else {
     ret = node->left->right;
     if (node->parent->right == node) node->parent->right = ret;
-    else node->parent->left = node;
+    else node->parent->left = ret;
   }
 
   auto tmp = node->left;
@@ -784,23 +783,18 @@ avl_tree_base *tree_avl::_rotate_lr(avl_tree_base *node) {
   ret->left = tmp;
   ret->right = node;
 
+  // 更正平衡因子
+  _update_bf(ret);
+
   return ret;
 }
 
-// todo:
 void tree_avl::_update_bf(avl_tree_base *node) {
-  if (node == nullptr) return;
-  else
-    node->balance_factor = _get_height(node->left) - _get_height(node->right);
-//  if (node->left == nullptr && node->right != nullptr)
-//    node->balance_factor = -std::abs(node->right->balance_factor) - 1;
-//  else if (node->right == nullptr && node->left != nullptr)
-//    node->balance_factor = std::abs(node->left->balance_factor) + 1;
-//  else if (node->left == nullptr && node->right == nullptr)
-//    node->balance_factor = 0;
-//  else
-//    node->balance_factor = std::abs(node->left->balance_factor) -
-//        std::abs(node->right->balance_factor);
+  node->balance_factor = _get_height(node->left) - _get_height(node->right);
+  node->left->balance_factor =
+      _get_height(node->left->left) - _get_height(node->left->right);
+  node->right->balance_factor =
+      _get_height(node->right->left) - _get_height(node->right->right);
 }
 
 int tree_avl::get_height() { return _get_height(_root); }
@@ -808,6 +802,14 @@ int tree_avl::get_height() { return _get_height(_root); }
 int tree_avl::_get_height(avl_tree_base *node) {
   if (node == nullptr) return 0;
   return std::max(_get_height(node->left), _get_height(node->right)) + 1;
+}
+
+void tree_avl::delete_val(int val) {
+  delete_node(search_val(val));
+}
+
+void tree_avl::_delete_fixup(avl_tree_base *node) {
+
 }
 
 avl_tree_base *tree_avl::search_val(int val) {
@@ -861,7 +863,7 @@ void test_rb_tree() {
 }
 
 void test_avl_tree() {
-  std::vector<int> nums{16, 3, 7, 11, 9, 26, 18, 14, 15};
+  std::vector<int> nums{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
   auto *new_tree = new tree_avl();
   std::cout << "insert node: ";
   for (int num : nums) {
