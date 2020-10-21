@@ -8,6 +8,7 @@
 
 #include "dbg-macro/dbg.h"
 
+// todo: 增加代码注释
 namespace tiny_sort {
 std::vector<int> select_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
