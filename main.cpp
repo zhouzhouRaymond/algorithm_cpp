@@ -9,7 +9,21 @@
 #include "dbg-macro/dbg.h"
 
 // todo: 增加代码注释
+
+/* 排序算法命名空间
+ * 实现了：
+ * 1. 选择排序
+ * 2. 插入排序
+ * 3. 希尔排序
+ * 4. 归并排序 应用实例：逆序对
+ * 5. 快速排序 应用实例：查找中位数、查找第i大的数字
+ * 6. 堆排序
+ * */
 namespace tiny_sort {
+/* 选择排序
+ * 从小到大依次排序
+ * 稳定排序
+ * */
 std::vector<int> select_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
   // min is current changing position
@@ -17,6 +31,7 @@ std::vector<int> select_sort(std::vector<int> num) {
     int iter_min = min;
     // find the min_index from the unsorted part
     for (int iter = min; iter < num_size; ++iter)
+      // 稳定排序的关键 >
       iter_min = num[iter_min] > num[iter] ? iter : iter_min;
     // change
     std::swap(num[min], num[iter_min]);
@@ -24,11 +39,16 @@ std::vector<int> select_sort(std::vector<int> num) {
   return num;
 }
 
+/* 插入排序
+ * 依次排列未排序序列
+ * 稳定排序
+ * */
 std::vector<int> insert_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
   for (int iter = 1; iter < num_size; ++iter) {
     int iter_min = 0;
     // find the insert position
+    // 稳定排序的关键 <=
     while (iter_min <= iter && num[iter_min] <= num[iter]) ++iter_min;
     // move for current position
     for (; iter_min < iter; ++iter_min) std::swap(num[iter_min], num[iter]);
@@ -36,100 +56,99 @@ std::vector<int> insert_sort(std::vector<int> num) {
   return num;
 }
 
+/* 希尔排序
+ *
+ * 非稳定排序*/
 std::vector<int> shell_sort(std::vector<int> num) {
   int h = 1, num_size = static_cast<int>(num.size());
+  // 寻找最大的h
   while (h < num_size / 3) h = 3 * h + 1;
   for (; h >= 1; h /= 3)
     // h-sorted
     for (int iter = h; iter < num_size; ++iter)
       for (int iter_min = iter; iter_min >= h && num[iter_min] < num[iter_min - h]; iter_min -= h)
+        // 当h=1时，类似插入排序。
         std::swap(num[iter_min], num[iter_min - h]);
 
   return num;
 }
 
-// the index is [low, high)
-void _merge(std::vector<int>& num, int low, int middle, int high) {
-  if (num[middle] <= num[middle + 1]) return;
-  std::vector<int> ret;
-  int start = low, ret_middle = middle++;
-  for (; low <= ret_middle && middle <= high;) {
-    if (num[low] <= num[middle])
-      ret.push_back(num[low++]);
-    else
-      ret.push_back(num[middle++]);
-  }
-  for (; low <= ret_middle; ++low) ret.push_back(num[low]);
-  for (; middle <= high; ++middle) ret.push_back(num[middle]);
-
-  (void)std::for_each(ret.begin(), ret.end(), [&start, &num](int& val) { num[start++] = val; });
-}
-
-// the index is [low, high]
-void merge_high_to_low(std::vector<int>& num, int low, int high) {
-  if (low == high) return;
+/* 归并排序：从高到低
+ * 输入参数范围[low, high)
+ *
+ * 非稳定排序*/
+void _merge_high_low(std::vector<int>& num, int low, int high) {
+  if (low >= (high - 1)) return;
   int middle = low + (high - low) / 2;
-  merge_high_to_low(num, low, middle);
-  merge_high_to_low(num, middle + 1, high);
+  _merge_high_low(num, low, middle);
+  _merge_high_low(num, middle, high);
   // merge into num
-  _merge(num, low, middle, high);
+  std::inplace_merge(num.begin() + low, num.begin() + middle, num.begin() + high);
 }
 
-void merge_low_to_high(std::vector<int>& num) {
-  int N = num.size();
-  for (int sz = 2; sz <= N; sz *= 2)
-    for (int iter = 0; iter + sz - 1 < N; iter += sz)
-      _merge(num, iter, iter + sz / 2 - 1, iter + sz - 1);
+std::vector<int> merge_high_low(std::vector<int> num) {
+  _merge_high_low(num, 0, static_cast<int>(num.size()));
+  return num;
+}
 
-  num = insert_sort(num);
+/* 归并排序：从低到高
+ * */
+std::vector<int> merge_low_high(std::vector<int> num) {
+  int nums_size = static_cast<int>(num.size());
+  for (int sz = 2; sz <= nums_size; sz *= 2)
+    for (int iter = 0; iter + sz - 1 < nums_size; iter += sz)
+      std::inplace_merge(num.begin() + iter, num.begin() + iter + sz / 2 - 1,
+                         num.begin() + iter + sz - 1);
+
+  return insert_sort(num);
 }
 
 int _inverse_pairs(std::vector<int>& num, int low, int high) {
-  if (low == high) return 0;
-  int ret = 0;
-  int middle = low + (high - low) / 2;
+  if (low >= (high - 1)) return 0;
+  int ret = 0, middle = low + (high - low) / 2;
 
   ret += _inverse_pairs(num, low, middle);
-  ret += _inverse_pairs(num, middle + 1, high);
+  ret += _inverse_pairs(num, middle, high);
 
-  for (int left = middle, right = high; left >= low && high > middle;) {
+  for (int left = middle - 1, right = high - 1; left >= low && high >= middle;) {
     if (num[left] > num[right]) {
-      ret += right - middle;
+      ret += right - middle + 1;
       --left;
     } else if (num[left] < num[right])
       --right;
     else
       break;
   }
-  _merge(num, low, middle, high);
+  std::inplace_merge(num.begin() + low, num.begin() + middle, num.begin() + high);
   return ret;
 }
 
 int inverse_pairs(std::vector<int> num) {
-  return _inverse_pairs(num, 0, static_cast<int>(num.size()) - 1);
+  return _inverse_pairs(num, 0, static_cast<int>(num.size()));
 }
 
-int _reverse_pairs_important(std::vector<int>& num, int low, int high) {
-  if (low >= high) return 0;
+int _inverse_pairs_important(std::vector<int>& num, int low, int high) {
+  if (low >= (high - 1)) return 0;
   int ret = 0, middle = (high - low) / 2 + low;
-  ret += _reverse_pairs_important(num, low, middle);
-  ret += _reverse_pairs_important(num, middle + 1, high);
+
+  ret += _inverse_pairs_important(num, low, middle);
+  ret += _inverse_pairs_important(num, middle, high);
 
   // 统计重要逆序对
-  for (int iter_low = low, iter_high = middle + 1; iter_low <= middle; ++iter_low) {
-    while (iter_high <= high && num[iter_low] > num[iter_high] * 2LL) ++iter_high;
-    ret += iter_high - (middle + 1);
+  for (int iter_low = low, iter_high = middle; iter_low < middle; ++iter_low) {
+    while (iter_high < high && num[iter_low] > num[iter_high] * 2LL) ++iter_high;
+    ret += iter_high - middle;
   }
-  _merge(num, low, middle, high);
+  std::inplace_merge(num.begin() + low, num.begin() + middle, num.begin() + high);
   return ret;
 }
 
 int inverse_pairs_important(std::vector<int> num) {
-  return _reverse_pairs_important(num, 0, static_cast<int>(num.size()) - 1);
+  return _inverse_pairs_important(num, 0, static_cast<int>(num.size()));
 }
 
 int _partition(std::vector<int>& num, int low, int high) {
-  int iter_low = low, iter_high = high;
+  int iter_low = low, iter_high = high - 1;
   while (iter_low != iter_high) {
     while (num[iter_low] <= num[low] && iter_low < high) ++iter_low;
     while (num[iter_high] >= num[low] && iter_high > low) --iter_high;
@@ -140,16 +159,36 @@ int _partition(std::vector<int>& num, int low, int high) {
   return iter_high;
 }
 
-void quick_sort(std::vector<int>& num, int low, int high) {
-  if (low >= high) return;
+void _quick_sort(std::vector<int>& num, int low, int high) {
+  if (low >= (high - 1)) return;
 
   int partition = _partition(num, low, high);
-  quick_sort(num, low, partition - 1);
-  quick_sort(num, partition + 1, high);
+  _quick_sort(num, low, partition);
+  _quick_sort(num, partition + 1, high);
+}
+
+std::vector<int> quick_sort(std::vector<int> num) {
+  _quick_sort(num, 0, static_cast<int>(num.size()));
+  return num;
+}
+
+int select_index(std::vector<int> num, int k) {
+  k = k - 1;
+  int low = 0, high = static_cast<int>(num.size());
+  while (low < high) {
+    int iter = _partition(num, low, high);
+    if (iter == k)
+      return num[k];
+    else if (iter > k)
+      high = iter;
+    else
+      low = iter + 1;
+  }
+  return num[k];
 }
 
 void _swim(std::vector<int>& num, int low, int high) {
-  // only change the left_ item
+  // only change the left item
   for (; high / 2 >= low && num[high / 2] < num[high]; high /= 2) {
     int iter_change = 0;
     if (high / 2 == 0)
@@ -191,12 +230,14 @@ void heap_sort_sink(std::vector<int>& num) {
   }
 }
 
-int midian_finder(const std::vector<int>& num) {
+int middle_finder(const std::vector<int>& num) {
   int ret = 0;
-  std::priority_queue<int> max_heap;
+  // 大顶堆
+  std::priority_queue<int, std::vector<int>, std::less<>> max_heap;
+  // 小顶堆
   std::priority_queue<int, std::vector<int>, std::greater<>> min_heap;
 
-  for (int item : num) {
+  for (auto item : num) {
     max_heap.push(item);
     min_heap.push(max_heap.top());
     max_heap.pop();
@@ -205,6 +246,7 @@ int midian_finder(const std::vector<int>& num) {
       min_heap.pop();
     }
   }
+
   if (max_heap.size() == min_heap.size())
     ret = (max_heap.top() + min_heap.top()) / 2;
   else
@@ -213,58 +255,23 @@ int midian_finder(const std::vector<int>& num) {
   return ret;
 }
 
-int select_index(std::vector<int> num, int k) {
-  k = k - 1;
-  int low = 0, high = static_cast<int>(num.size()) - 1;
-  while (low < high) {
-    int iter = _partition(num, low, high);
-    if (iter == k)
-      return num[k];
-    else if (iter > k)
-      high = iter - 1;
-    else
-      low = iter + 1;
-  }
-  return num[k];
-}
-
 namespace test {
 void test_sort() {
   std::vector<int> num{9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::cout << tiny_sort::middle_finder(num);
+  //  auto tmp = tiny_sort::merge_high_to_low(num);
+  //  auto tmp = tiny_sort::merge_low_to_high(num);
+  //  std::cout << tiny_sort::inverse_pairs_important(num);
 
-  std::cout << "the inverse pairs: " << tiny_sort::inverse_pairs(num) << std::endl;
-  std::cout << "the inverse pairs: " << tiny_sort::inverse_pairs_important(num) << std::endl;
-
-  std::vector<int> ret_select = tiny_sort::select_sort(num);
-  std::vector<int> ret_insert = tiny_sort::insert_sort(num);
-  std::vector<int> ret_shell = tiny_sort::shell_sort(num);
-  std::vector<int> vec_merge_lh = num, vec_merge_hl = num, vec_quick = num, vec_heap_sink = num,
-                   vec_heap_swim = num;
-  tiny_sort::merge_high_to_low(vec_merge_hl, 0, static_cast<int>(num.size()) - 1);
-  tiny_sort::merge_low_to_high(vec_merge_lh);
-  tiny_sort::quick_sort(vec_quick, 0, static_cast<int>(vec_quick.size()) - 1);
-  tiny_sort::heap_sort_sink(vec_heap_sink);
-
-  std::cout << "   select sort: " << std::is_sorted(ret_select.begin(), ret_select.end())
-            << std::endl;
-  std::cout << "   insert sort: " << std::is_sorted(ret_insert.begin(), ret_insert.end())
-            << std::endl;
-  std::cout << "   shell sort: " << std::is_sorted(ret_shell.begin(), ret_shell.end()) << std::endl;
-  std::cout << "   merge_hl sort: " << std::is_sorted(vec_merge_hl.begin(), vec_merge_hl.end())
-            << std::endl;
-  std::cout << "   merge_lh sort: " << std::is_sorted(vec_merge_lh.begin(), vec_merge_lh.end())
-            << std::endl;
-  std::cout << "   quick sort: " << std::is_sorted(vec_quick.begin(), vec_quick.end()) << std::endl;
-  std::cout << "   heap sort_sink: " << std::is_sorted(vec_heap_sink.begin(), vec_heap_sink.end())
-            << std::endl;
-  std::cout << "   midian number: " << tiny_sort::midian_finder(num) << std::endl;
-  std::cout << "   select the 6th number: " << tiny_sort::select_index(num, 6) << std::endl;
+  //  auto tmp = tiny_sort::quick_sort(num);
+  //  for (auto nums : tmp) std::cout << nums << " ";
+  //  std::cout << select_index(num, 1);
 }
 }  // namespace test
 }  // namespace tiny_sort
 
 namespace tiny_search {
-// return the val_ index
+// return the val index
 int binary_search(const std::vector<int>& num, const int& val, int low, int high) {
   if (low > high) return -1;
   int middle = low + (high - low) / 2, cmp = num[middle] - val;
@@ -277,7 +284,7 @@ int binary_search(const std::vector<int>& num, const int& val, int low, int high
     return middle;
 }
 
-// return the val_ index
+// return the val index
 int binary_search_for(const std::vector<int>& num, const int& val) {
   int low = 0, high = static_cast<int>(num.size()) - 1;
   while (low <= high) {
@@ -433,7 +440,7 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
         node->parent_->parent_->color_ = _rb_tree_color::_red;
         _right_rotate(node->parent_->parent_);
       }
-    } else {  // the right_ part
+    } else {  // the right part
       auto tmp_left = node->parent_->parent_->left_;
       if (tmp_left != nullptr && tmp_left->color_ == _rb_tree_color::_red) {
         node->parent_->color_ = _rb_tree_color::_black;
@@ -453,13 +460,12 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
   _root->color_ = _rb_tree_color::_black;
 }
 
+void rb_tree::delete_node(int val) { delete_node(search(val)); }
+
 // todo:
 void rb_tree::delete_node(rb_avl_tree_base* node) {
   if (node == nullptr) return;
 }
-
-// todo:
-void rb_tree::delete_node(int val) { delete_node(search(val)); }
 
 // todo:
 void rb_tree::_delete_fixup(rb_avl_tree_base* node) {}
@@ -901,12 +907,12 @@ void test() {
 }  // namespace test
 
 int main() {
-  //  tiny_sort::test::test_sort();
+  tiny_sort::test::test_sort();
   //  tiny_search::test::test_search();
   //  tiny_rb_tree::test::test_rb_tree();
   //  feature_ranges::test::test_new_feature();
   //  test::test();
 
-  tiny_rb_tree::test::test_avl_tree();
+  //  tiny_rb_tree::test::test_avl_tree();
   return 0;
 }
