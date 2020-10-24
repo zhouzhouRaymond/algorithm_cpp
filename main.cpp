@@ -255,21 +255,6 @@ int middle_finder(const std::vector<int>& num) {
   return ret;
 }
 
-int select_index(std::vector<int> num, int k) {
-  k = k - 1;
-  int low = 0, high = static_cast<int>(num.size()) - 1;
-  while (low < high) {
-    int iter = _partition(num, low, high);
-    if (iter == k)
-      return num[k];
-    else if (iter > k)
-      high = iter - 1;
-    else
-      low = iter + 1;
-  }
-  return num[k];
-}
-
 namespace test {
 void test_sort() {
   std::vector<int> num{9, 8, 7, 6, 5, 4, 3, 2, 1};
@@ -435,7 +420,7 @@ void rb_tree::insert(rb_avl_tree_base* node) {
     if (node->val < p->val)
       p->left = node;
     else
-      p->right_ = node;
+      p->right = node;
   } else
     _root = node;
   node->color = _rb_tree_color::_red;
