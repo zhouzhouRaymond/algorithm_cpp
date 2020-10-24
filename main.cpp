@@ -338,6 +338,10 @@ class rb_tree {
   void in_order();
   void post_order();
 
+  void pre_order_for();
+  void in_order_for();
+  void post_order_for();
+
   void bfs();
   void dfs();
 
@@ -488,7 +492,75 @@ rb_avl_tree_base* rb_tree::search(int value) {
   return nullptr;
 }
 
-// todo: 非递归版本
+/* 1. 访问当前节点，并将节点入栈
+ * 2. 当前节点左孩子为空，将当前节点替换为栈顶节点的右孩子节点，执行操作1
+ * 3. 当前节点左孩子不为空，替换当前节点为左孩子节点，执行操作1
+ * */
+void rb_tree::pre_order_for() {
+  auto iter_node = _root;
+  std::stack<rb_avl_tree_base*> nodes;
+  while (iter_node != nullptr || nodes.empty() == false) {
+    while (iter_node != nullptr) {
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.push(iter_node);
+      iter_node = iter_node->left;
+    }
+    if (nodes.empty() == false) {
+      iter_node = nodes.top();
+      nodes.pop();
+      iter_node = iter_node->right;
+    }
+  }
+}
+
+/* 1. 将当前节点入栈
+ * 2. 当前节点左孩子为空，输出栈顶节点，将当前节点替换为栈顶结点的右孩子节点，执行操作1
+ * 3. 当前节点左孩子不为空，将当前节点替换为左孩子节点，执行操作1
+ * */
+void rb_tree::in_order_for() {
+  auto iter_node = _root;
+  std::stack<rb_avl_tree_base*> nodes;
+  while (iter_node != nullptr || nodes.empty() == false) {
+    while (iter_node != nullptr) {
+      nodes.push(iter_node);
+      iter_node = iter_node->left;
+    }
+    if (nodes.empty() == false) {
+      iter_node = nodes.top();
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.pop();
+      iter_node = iter_node->right;
+    }
+  }
+}
+
+/* 记录上一次输出的节点。
+ * 当前节点在左右孩子访问之后再访问。
+ * 当前节点的左右孩子节点为空 或 当前的节点的左右孩子节点已经被访问过 则直接输出
+ * 否则 将当前节点的右左孩子依次入栈
+ * */
+void rb_tree::post_order_for() {
+  rb_avl_tree_base *iter_node = nullptr, *pre = nullptr;
+  std::stack<rb_avl_tree_base*> nodes;
+  nodes.push(_root);
+  while (nodes.empty() == false) {
+    iter_node = nodes.top();
+    if ((iter_node->left == nullptr && iter_node->right == nullptr) ||
+        (pre != nullptr) && (iter_node->left == pre || iter_node->right == pre)) {
+      // 当前节点不存在左孩子或右孩子 或 当前节点的孩子节点已经被访问过 则直接输出
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.pop();
+      pre = iter_node;
+    } else {
+      if (iter_node->right != nullptr) nodes.push(iter_node->right);
+      if (iter_node->left != nullptr) nodes.push(iter_node->left);
+    }
+  }
+}
+
 // 输出格式 value | color
 void rb_tree::pre_order() { _pre_order(_root); }
 
@@ -844,10 +916,19 @@ void test_rb_tree() {
   new_tree->pre_order();
   std::cout << "the in order: " << std::endl;
   new_tree->in_order();
+  std::cout << "the post order: " << std::endl;
+  new_tree->post_order();
   std::cout << "BFS order: " << std::endl;
   new_tree->bfs();
   std::cout << "DFS order: " << std::endl;
   new_tree->dfs();
+
+  std::cout << "the pre order for loop: " << std::endl;
+  new_tree->pre_order_for();
+  std::cout << "the in order for loop: " << std::endl;
+  new_tree->in_order_for();
+  std::cout << "the post order for loop: " << std::endl;
+  new_tree->post_order_for();
 }
 
 void test_avl_tree() {
@@ -903,10 +984,10 @@ void test() {
 int main() {
   //  tiny_sort::test::test_sort();
   //  tiny_search::test::test_search();
-  //  tiny_rb_tree::test::test_rb_tree();
+  tiny_rb_tree::test::test_rb_tree();
   //  feature_ranges::test::test_new_feature();
   //  test::test();
 
-  tiny_rb_tree::test::test_avl_tree();
+  //  tiny_rb_tree::test::test_avl_tree();
   return 0;
 }
