@@ -456,15 +456,14 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
   _root->color = _rb_tree_color::_black;
 }
 
-// todo:
+// todo: 红黑树删除节点
 void rb_tree::delete_node(rb_avl_tree_base* node) {
   if (node == nullptr) return;
 }
 
-// todo:
 void rb_tree::delete_node(int val) { delete_node(search(val)); }
 
-// todo:
+// todo: 红黑树删除节点修复
 void rb_tree::_delete_fixup(rb_avl_tree_base* node) {}
 
 void rb_tree::_delete_transplant(rb_avl_tree_base* node, rb_avl_tree_base* new_node) {
@@ -617,6 +616,33 @@ void rb_tree::dfs() {
   }
 }
 
+namespace test {
+void test_rb_tree() {
+  // 验证二叉树序列 前序和中序
+  auto* new_tree = new rb_tree();
+  for (int iter = 0; iter < 10; ++iter) new_tree->insert(iter);
+  std::cout << "the pre order: " << std::endl;
+  new_tree->pre_order();
+  std::cout << "the in order: " << std::endl;
+  new_tree->in_order();
+  std::cout << "the post order: " << std::endl;
+  new_tree->post_order();
+  std::cout << "BFS order: " << std::endl;
+  new_tree->bfs();
+  std::cout << "DFS order: " << std::endl;
+  new_tree->dfs();
+
+  std::cout << "the pre order for loop: " << std::endl;
+  new_tree->pre_order_for();
+  std::cout << "the in order for loop: " << std::endl;
+  new_tree->in_order_for();
+  std::cout << "the post order for loop: " << std::endl;
+  new_tree->post_order_for();
+}
+}  // namespace test
+}  // namespace tiny_rb_tree
+
+namespace tiny_avl_tree {
 class avl_tree_base {
  public:
   // 平衡因子：左子树 减 右子树
@@ -860,12 +886,12 @@ int tree_avl::_get_height(avl_tree_base* node) {
 
 void tree_avl::delete_val(int val) { delete_node(search_val(val)); }
 
-// todo:
+// todo: avl树删除节点
 void tree_avl::delete_node(avl_tree_base* node) {
   if (node == nullptr) return;
 }
 
-// todo:
+// todo: avl树删除节点修复
 void tree_avl::_delete_fixup(avl_tree_base* node) {}
 
 avl_tree_base* tree_avl::search_val(int val) {
@@ -907,29 +933,6 @@ void tree_avl::_post_order(avl_tree_base* node) {
 }
 
 namespace test {
-void test_rb_tree() {
-  // 验证二叉树序列 前序和中序
-  auto* new_tree = new rb_tree();
-  for (int iter = 0; iter < 10; ++iter) new_tree->insert(iter);
-  std::cout << "the pre order: " << std::endl;
-  new_tree->pre_order();
-  std::cout << "the in order: " << std::endl;
-  new_tree->in_order();
-  std::cout << "the post order: " << std::endl;
-  new_tree->post_order();
-  std::cout << "BFS order: " << std::endl;
-  new_tree->bfs();
-  std::cout << "DFS order: " << std::endl;
-  new_tree->dfs();
-
-  std::cout << "the pre order for loop: " << std::endl;
-  new_tree->pre_order_for();
-  std::cout << "the in order for loop: " << std::endl;
-  new_tree->in_order_for();
-  std::cout << "the post order for loop: " << std::endl;
-  new_tree->post_order_for();
-}
-
 void test_avl_tree() {
   std::vector<int> nums{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
   auto* new_tree = new tree_avl();
@@ -948,18 +951,17 @@ void test_avl_tree() {
   std::cout << "avl_tree height: " << new_tree->get_height() << std::endl;
 }
 }  // namespace test
-}  // namespace tiny_rb_tree
+}  // namespace tiny_avl_tree
 
-// todo: 增加view视图功能
+namespace test_new_feature {
 #include <ranges>
-namespace feature_ranges {
 class point2d {
  public:
   int x, y, z;
 };
+// todo: 增加view视图特性
 
-namespace test {
-void test_new_feature() {
+void test() {
   // 列表初始化
   point2d new_point{.x = 1, .y = 4, .z = 3};
   std::cout << new_point.x << " | " << new_point.y << " | " << new_point.z << std::endl;
@@ -968,25 +970,9 @@ void test_new_feature() {
                    std::views::transform([](int i) { return i * i; }))
     std::cout << i << std::endl;
 }
-}  // namespace test
-}  // namespace feature_ranges
-
-namespace test {
-void test() {
-  std::vector<std::vector<int>> a{{1, 2, 3}, {2, 3, 4}};
-  for (auto& iter_row : a)
-    for (auto& iter_col : iter_row) std::cout << iter_col << " ";
-  std::cout << std::endl;
-}
-}  // namespace test
+}  // namespace test_new_feature
 
 int main() {
-  //  tiny_sort::test::test_sort();
-  //  tiny_search::test::test_search();
-  tiny_rb_tree::test::test_rb_tree();
-  //  feature_ranges::test::test_new_feature();
-  //  test::test();
-
-  //  tiny_rb_tree::test::test_avl_tree();
+  tiny_avl_tree::test::test_avl_tree();
   return 0;
 }
