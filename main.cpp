@@ -8,7 +8,6 @@
 
 #include "dbg-macro/dbg.h"
 
-// todo: 增加代码注释
 namespace tiny_sort {
 std::vector<int> select_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
@@ -149,7 +148,7 @@ void quick_sort(std::vector<int>& num, int low, int high) {
 }
 
 void _swim(std::vector<int>& num, int low, int high) {
-  // only change the left_ item
+  // only change the left item
   for (; high / 2 >= low && num[high / 2] < num[high]; high /= 2) {
     int iter_change = 0;
     if (high / 2 == 0)
@@ -264,7 +263,7 @@ void test_sort() {
 }  // namespace tiny_sort
 
 namespace tiny_search {
-// return the val_ index
+// return the val index
 int binary_search(const std::vector<int>& num, const int& val, int low, int high) {
   if (low > high) return -1;
   int middle = low + (high - low) / 2, cmp = num[middle] - val;
@@ -277,7 +276,7 @@ int binary_search(const std::vector<int>& num, const int& val, int low, int high
     return middle;
 }
 
-// return the val_ index
+// return the val index
 int binary_search_for(const std::vector<int>& num, const int& val) {
   int low = 0, high = static_cast<int>(num.size()) - 1;
   while (low <= high) {
@@ -306,16 +305,16 @@ enum _rb_tree_color { _red, _black };
 
 class rb_avl_tree_base {
  public:
-  int val_;
-  rb_avl_tree_base* parent_;
-  rb_avl_tree_base* left_;
-  rb_avl_tree_base* right_;
-  _rb_tree_color color_;
+  int val;
+  rb_avl_tree_base* parent;
+  rb_avl_tree_base* left;
+  rb_avl_tree_base* right;
+  _rb_tree_color color;
 
   explicit rb_avl_tree_base(int value = 0, rb_avl_tree_base* p = nullptr,
                             rb_avl_tree_base* l = nullptr, rb_avl_tree_base* r = nullptr,
                             _rb_tree_color c = _red)
-      : val_(value), parent_(p), left_(l), right_(r), color_(c) {}
+      : val(value), parent(p), left(l), right(r), color(c) {}
 };
 
 class rb_tree {
@@ -333,6 +332,10 @@ class rb_tree {
   void pre_order();
   void in_order();
   void post_order();
+
+  void pre_order_for();
+  void in_order_for();
+  void post_order_for();
 
   void bfs();
   void dfs();
@@ -359,33 +362,33 @@ rb_tree::rb_tree() : _root(nullptr) {}
 rb_tree::rb_tree(rb_avl_tree_base* root) : _root(root) {}
 
 void rb_tree::_left_rotate(rb_avl_tree_base* node) {
-  auto tmp = node->right_;
-  node->right_ = tmp->left_;
-  if (tmp->left_ != nullptr) tmp->left_->parent_ = node;
-  tmp->parent_ = node->parent_;
-  if (node->parent_ == nullptr)
+  auto tmp = node->right;
+  node->right = tmp->left;
+  if (tmp->left != nullptr) tmp->left->parent = node;
+  tmp->parent = node->parent;
+  if (node->parent == nullptr)
     _root = tmp;
-  else if (node == node->parent_->left_)
-    node->parent_->left_ = tmp;
+  else if (node == node->parent->left)
+    node->parent->left = tmp;
   else
-    node->parent_->right_ = tmp;
-  tmp->left_ = node;
-  node->parent_ = tmp;
+    node->parent->right = tmp;
+  tmp->left = node;
+  node->parent = tmp;
 }
 
 void rb_tree::_right_rotate(rb_avl_tree_base* node) {
-  auto tmp = node->left_;
-  node->left_ = tmp->right_;
-  if (tmp->right_ != nullptr) tmp->right_->parent_ = node;
-  tmp->parent_ = node->parent_;
-  if (node->parent_ == nullptr)
+  auto tmp = node->left;
+  node->left = tmp->right;
+  if (tmp->right != nullptr) tmp->right->parent = node;
+  tmp->parent = node->parent;
+  if (node->parent == nullptr)
     _root = tmp;
-  else if (node == node->parent_->left_)
-    node->parent_->left_ = tmp;
+  else if (node == node->parent->left)
+    node->parent->left = tmp;
   else
-    node->parent_->right_ = tmp;
-  tmp->right_ = node;
-  node->parent_ = tmp;
+    node->parent->right = tmp;
+  tmp->right = node;
+  node->parent = tmp;
 }
 
 void rb_tree::insert(int val) {
@@ -399,58 +402,58 @@ void rb_tree::insert(rb_avl_tree_base* node) {
   // 寻找插入位置
   while (iter != nullptr) {
     p = iter;
-    if (node->val_ < iter->val_)
-      iter = iter->left_;
+    if (node->val < iter->val)
+      iter = iter->left;
     else
-      iter = iter->right_;
+      iter = iter->right;
   }
-  node->parent_ = p;
+  node->parent = p;
   if (p != nullptr) {
-    if (node->val_ < p->val_)
-      p->left_ = node;
+    if (node->val < p->val)
+      p->left = node;
     else
-      p->right_ = node;
+      p->right = node;
   } else
     _root = node;
-  node->color_ = _rb_tree_color::_red;
+  node->color = _rb_tree_color::_red;
   _insert_fixup(node);
 }
 
 void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
-  while (node->parent_ != nullptr && node->parent_->color_ == _rb_tree_color::_red) {
-    if (node->parent_ == node->parent_->parent_->left_) {
-      auto tmp_right = node->parent_->parent_->right_;
-      if (tmp_right != nullptr && tmp_right->color_ == _rb_tree_color::_red) {
-        node->parent_->color_ = _rb_tree_color::_black;
-        tmp_right->color_ = _rb_tree_color::_black;
-        node->parent_->parent_->color_ = _rb_tree_color::_red;
-        node = node->parent_->parent_;
-      } else if (node == node->parent_->right_) {
-        node = node->parent_;
+  while (node->parent != nullptr && node->parent->color == _rb_tree_color::_red) {
+    if (node->parent == node->parent->parent->left) {
+      auto tmp_right = node->parent->parent->right;
+      if (tmp_right != nullptr && tmp_right->color == _rb_tree_color::_red) {
+        node->parent->color = _rb_tree_color::_black;
+        tmp_right->color = _rb_tree_color::_black;
+        node->parent->parent->color = _rb_tree_color::_red;
+        node = node->parent->parent;
+      } else if (node == node->parent->right) {
+        node = node->parent;
         _left_rotate(node);
       } else {
-        node->parent_->color_ = _rb_tree_color::_black;
-        node->parent_->parent_->color_ = _rb_tree_color::_red;
-        _right_rotate(node->parent_->parent_);
+        node->parent->color = _rb_tree_color::_black;
+        node->parent->parent->color = _rb_tree_color::_red;
+        _right_rotate(node->parent->parent);
       }
-    } else {  // the right_ part
-      auto tmp_left = node->parent_->parent_->left_;
-      if (tmp_left != nullptr && tmp_left->color_ == _rb_tree_color::_red) {
-        node->parent_->color_ = _rb_tree_color::_black;
-        tmp_left->color_ = _rb_tree_color::_black;
-        node->parent_->parent_->color_ = _rb_tree_color::_red;
-        node = node->parent_->parent_;
-      } else if (node == node->parent_->left_) {
-        node = node->parent_;
+    } else {  // the right part
+      auto tmp_left = node->parent->parent->left;
+      if (tmp_left != nullptr && tmp_left->color == _rb_tree_color::_red) {
+        node->parent->color = _rb_tree_color::_black;
+        tmp_left->color = _rb_tree_color::_black;
+        node->parent->parent->color = _rb_tree_color::_red;
+        node = node->parent->parent;
+      } else if (node == node->parent->left) {
+        node = node->parent;
         _right_rotate(node);
       } else {
-        node->parent_->color_ = _rb_tree_color::_black;
-        node->parent_->parent_->color_ = _rb_tree_color::_red;
-        _left_rotate(node->parent_->parent_);
+        node->parent->color = _rb_tree_color::_black;
+        node->parent->parent->color = _rb_tree_color::_red;
+        _left_rotate(node->parent->parent);
       }
     }
   }
-  _root->color_ = _rb_tree_color::_black;
+  _root->color = _rb_tree_color::_black;
 }
 
 // todo:
@@ -465,30 +468,98 @@ void rb_tree::delete_node(int val) { delete_node(search(val)); }
 void rb_tree::_delete_fixup(rb_avl_tree_base* node) {}
 
 void rb_tree::_delete_transplant(rb_avl_tree_base* node, rb_avl_tree_base* new_node) {
-  if (node->parent_ == nullptr)
+  if (node->parent == nullptr)
     _root = new_node;
-  else if (node == node->parent_->left_)
-    node->parent_->left_ = new_node;
+  else if (node == node->parent->left)
+    node->parent->left = new_node;
   else
-    node->parent_->right_ = new_node;
-  new_node->parent_ = node->parent_;
+    node->parent->right = new_node;
+  new_node->parent = node->parent;
 }
 
 rb_avl_tree_base* rb_tree::search(int value) {
   rb_avl_tree_base* iter = _root;
   while (iter != nullptr) {
-    if (iter->val_ == value)
+    if (iter->val == value)
       return iter;
-    else if (iter->val_ > value)
-      iter = iter->left_;
+    else if (iter->val > value)
+      iter = iter->left;
     else
-      iter = iter->right_;
+      iter = iter->right;
   }
   return nullptr;
 }
 
-// todo: 非递归版本
-// 输出格式 value | color_
+/* 1. 访问当前节点，并将节点入栈
+ * 2. 当前节点左孩子为空，将当前节点替换为栈顶节点的右孩子节点，执行操作1
+ * 3. 当前节点左孩子不为空，替换当前节点为左孩子节点，执行操作1
+ * */
+void rb_tree::pre_order_for() {
+  auto iter_node = _root;
+  std::stack<rb_avl_tree_base*> nodes;
+  while (iter_node != nullptr || nodes.empty() == false) {
+    while (iter_node != nullptr) {
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.push(iter_node);
+      iter_node = iter_node->left;
+    }
+    if (nodes.empty() == false) {
+      iter_node = nodes.top();
+      nodes.pop();
+      iter_node = iter_node->right;
+    }
+  }
+}
+
+/* 1. 将当前节点入栈
+ * 2. 当前节点左孩子为空，输出栈顶节点，将当前节点替换为栈顶结点的右孩子节点，执行操作1
+ * 3. 当前节点左孩子不为空，将当前节点替换为左孩子节点，执行操作1
+ * */
+void rb_tree::in_order_for() {
+  auto iter_node = _root;
+  std::stack<rb_avl_tree_base*> nodes;
+  while (iter_node != nullptr || nodes.empty() == false) {
+    while (iter_node != nullptr) {
+      nodes.push(iter_node);
+      iter_node = iter_node->left;
+    }
+    if (nodes.empty() == false) {
+      iter_node = nodes.top();
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.pop();
+      iter_node = iter_node->right;
+    }
+  }
+}
+
+/* 记录上一次输出的节点。
+ * 当前节点在左右孩子访问之后再访问。
+ * 当前节点的左右孩子节点为空 或 当前的节点的左右孩子节点已经被访问过 则直接输出
+ * 否则 将当前节点的右左孩子依次入栈
+ * */
+void rb_tree::post_order_for() {
+  rb_avl_tree_base *iter_node = nullptr, *pre = nullptr;
+  std::stack<rb_avl_tree_base*> nodes;
+  nodes.push(_root);
+  while (nodes.empty() == false) {
+    iter_node = nodes.top();
+    if ((iter_node->left == nullptr && iter_node->right == nullptr) ||
+        (pre != nullptr) && (iter_node->left == pre || iter_node->right == pre)) {
+      // 当前节点不存在左孩子或右孩子 或 当前节点的孩子节点已经被访问过 则直接输出
+      std::cout << iter_node->val << " | "
+                << ((iter_node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+      nodes.pop();
+      pre = iter_node;
+    } else {
+      if (iter_node->right != nullptr) nodes.push(iter_node->right);
+      if (iter_node->left != nullptr) nodes.push(iter_node->left);
+    }
+  }
+}
+
+// 输出格式 value | color
 void rb_tree::pre_order() { _pre_order(_root); }
 
 void rb_tree::in_order() { _in_order(_root); }
@@ -497,26 +568,26 @@ void rb_tree::post_order() { _post_order(_root); }
 
 void rb_tree::_pre_order(rb_avl_tree_base* node) const {
   if (node == nullptr) return;
-  std::cout << "  " << node->val_ << " | "
-            << ((node->color_ == _rb_tree_color::_red) ? "red" : "black") << std::endl;
-  _pre_order(node->left_);
-  _pre_order(node->right_);
+  std::cout << "  " << node->val << " | "
+            << ((node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+  _pre_order(node->left);
+  _pre_order(node->right);
 }
 
 void rb_tree::_in_order(rb_avl_tree_base* node) const {
   if (node == nullptr) return;
-  _in_order(node->left_);
-  std::cout << "  " << node->val_ << " | "
-            << ((node->color_ == _rb_tree_color::_red) ? "red" : "black") << std::endl;
-  _in_order(node->right_);
+  _in_order(node->left);
+  std::cout << "  " << node->val << " | "
+            << ((node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+  _in_order(node->right);
 }
 
 void rb_tree::_post_order(rb_avl_tree_base* node) const {
   if (node == nullptr) return;
-  _post_order(node->left_);
-  _post_order(node->right_);
-  std::cout << "  " << node->val_ << " | "
-            << ((node->color_ == _rb_tree_color::_red) ? "red" : "black") << std::endl;
+  _post_order(node->left);
+  _post_order(node->right);
+  std::cout << "  " << node->val << " | "
+            << ((node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
 }
 
 void rb_tree::bfs() {
@@ -524,10 +595,10 @@ void rb_tree::bfs() {
   stack.push(_root);
 
   while (!stack.empty()) {
-    if (stack.front()->left_ != nullptr) stack.push(stack.front()->left_);
-    if (stack.front()->right_ != nullptr) stack.push(stack.front()->right_);
-    std::cout << "  " << stack.front()->val_ << " | "
-              << (stack.front()->color_ == _rb_tree_color::_red ? "red" : "black") << std::endl;
+    if (stack.front()->left != nullptr) stack.push(stack.front()->left);
+    if (stack.front()->right != nullptr) stack.push(stack.front()->right);
+    std::cout << "  " << stack.front()->val << " | "
+              << (stack.front()->color == _rb_tree_color::_red ? "red" : "black") << std::endl;
     stack.pop();
   }
 }
@@ -538,11 +609,11 @@ void rb_tree::dfs() {
 
   while (!stack.empty()) {
     auto curr_node = stack.top();
-    std::cout << "  " << stack.top()->val_ << " | "
-              << (stack.top()->color_ == _rb_tree_color::_red ? "red" : "black") << std::endl;
+    std::cout << "  " << stack.top()->val << " | "
+              << (stack.top()->color == _rb_tree_color::_red ? "red" : "black") << std::endl;
     stack.pop();
-    if (curr_node->right_ != nullptr) stack.push(curr_node->right_);
-    if (curr_node->left_ != nullptr) stack.push(curr_node->left_);
+    if (curr_node->right != nullptr) stack.push(curr_node->right);
+    if (curr_node->left != nullptr) stack.push(curr_node->left);
   }
 }
 
@@ -844,10 +915,19 @@ void test_rb_tree() {
   new_tree->pre_order();
   std::cout << "the in order: " << std::endl;
   new_tree->in_order();
+  std::cout << "the post order: " << std::endl;
+  new_tree->post_order();
   std::cout << "BFS order: " << std::endl;
   new_tree->bfs();
   std::cout << "DFS order: " << std::endl;
   new_tree->dfs();
+
+  std::cout << "the pre order for loop: " << std::endl;
+  new_tree->pre_order_for();
+  std::cout << "the in order for loop: " << std::endl;
+  new_tree->in_order_for();
+  std::cout << "the post order for loop: " << std::endl;
+  new_tree->post_order_for();
 }
 
 void test_avl_tree() {
@@ -903,10 +983,10 @@ void test() {
 int main() {
   //  tiny_sort::test::test_sort();
   //  tiny_search::test::test_search();
-  //  tiny_rb_tree::test::test_rb_tree();
+  tiny_rb_tree::test::test_rb_tree();
   //  feature_ranges::test::test_new_feature();
   //  test::test();
 
-  tiny_rb_tree::test::test_avl_tree();
+  //  tiny_rb_tree::test::test_avl_tree();
   return 0;
 }
