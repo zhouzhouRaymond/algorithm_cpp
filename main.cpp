@@ -13,6 +13,7 @@
  * 4. 归并排序 应用实例：逆序对
  * 5. 快速排序 应用实例：查找中位数、查找第i大的数字
  * 6. 堆排序
+ * 7. 随机快排
  * */
 namespace tiny_sort {
 /* 选择排序
@@ -205,7 +206,7 @@ void _sink(std::vector<int>& num, int low, int high) {
   }
 }
 
-void heap_sort_swim(std::vector<int>& num) {
+std::vector<int> heap_sort_swim(std::vector<int> num) {
   int nums_size = static_cast<int>(num.size()) - 1;
   for (int iter = nums_size / 2; iter > 0; --iter) _sink(num, iter, nums_size);
 
@@ -213,9 +214,10 @@ void heap_sort_swim(std::vector<int>& num) {
     std::swap(num[iter], num[nums_size]);
     _swim(num, ++iter, nums_size);
   }
+  return num;
 }
 
-void heap_sort_sink(std::vector<int>& num) {
+std::vector<int> heap_sort_sink(std::vector<int> num) {
   int num_size = static_cast<int>(num.size()) - 1;
   for (int iter = num_size / 2; iter > 0; --iter) _sink(num, iter, num_size);
 
@@ -223,6 +225,7 @@ void heap_sort_sink(std::vector<int>& num) {
     std::swap(num[iter], num[0]);
     _sink(num, 0, --iter);
   }
+  return num;
 }
 
 int middle_finder(const std::vector<int>& num) {
@@ -250,10 +253,31 @@ int middle_finder(const std::vector<int>& num) {
   return ret;
 }
 
+/* 随机排序与快排的差别主要在于
+ * partition的位置不是直接选择第一个，而是随机选择
+ * */
+int _random_partition(std::vector<int>& nums, int low, int high) {
+  std::swap(nums[low], nums[(rand() % (high - low)) + low]);
+  return _partition(nums, low, high);
+}
+
+void _random_quick_sort(std::vector<int>& nums, int low, int high) {
+  if (low >= (high - 1)) return;
+
+  int partition = _random_partition(nums, low, high);
+  _random_quick_sort(nums, low, partition);
+  _random_quick_sort(nums, partition + 1, high);
+}
+
+std::vector<int> random_quick_sort(std::vector<int> nums) {
+  _random_quick_sort(nums, 0, static_cast<int>(nums.size()));
+  return nums;
+}
+
 namespace test {
 void test_sort() {
-  std::vector<int> num{9, 8, 7, 6, 5, 4, 3, 2, 1};
-  std::cout << tiny_sort::middle_finder(num);
+  std::vector<int> num{1, 2, 3, 4, 5, 6, 7};
+  //  std::cout << tiny_sort::middle_finder(num);
   //  auto tmp = tiny_sort::merge_high_to_low(num);
   //  auto tmp = tiny_sort::merge_low_to_high(num);
   //  std::cout << tiny_sort::inverse_pairs_important(num);
@@ -261,6 +285,8 @@ void test_sort() {
   //  auto tmp = tiny_sort::quick_sort(num);
   //  for (auto nums : tmp) std::cout << nums << " ";
   //  std::cout << select_index(num, 1);
+  auto tmp = tiny_sort::random_quick_sort(num);
+  for (auto item : tmp) std::cout << item << std::endl;
 }
 }  // namespace test
 }  // namespace tiny_sort
@@ -976,6 +1002,7 @@ void test() {
 }  // namespace test_new_feature
 
 int main() {
-  tiny_avl_tree::test::test_avl_tree();
+  //  tiny_avl_tree::test::test_avl_tree();
+  tiny_sort::test::test_sort();
   return 0;
 }
