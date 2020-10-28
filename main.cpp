@@ -1,10 +1,4 @@
-#include <algorithm>
-#include <iostream>
-#include <queue>
-#include <ranges>
-#include <stack>
-#include <string_view>
-#include <vector>
+#include <bits/stdc++.h>
 
 #include "dbg-macro/dbg.h"
 
