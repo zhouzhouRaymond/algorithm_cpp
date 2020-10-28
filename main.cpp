@@ -9,6 +9,7 @@
 #include "dbg-macro/dbg.h"
 
 // todo: 增加代码注释
+// todo: 随机快排
 
 /* 排序算法命名空间
  * 实现了：
