@@ -13,12 +13,12 @@
  * 5. 快速排序 应用实例：查找中位数、查找第i大的数字
  * 6. 堆排序
  * 7. 随机快排
- * */
+ */
 namespace tiny_sort {
 /* 选择排序
  * 从小到大依次排序
  * 稳定排序
- * */
+ */
 std::vector<int> select_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
   // min is current changing position
@@ -37,7 +37,7 @@ std::vector<int> select_sort(std::vector<int> num) {
 /* 插入排序
  * 依次排列未排序序列
  * 稳定排序
- * */
+ */
 std::vector<int> insert_sort(std::vector<int> num) {
   int num_size = static_cast<int>(num.size());
   for (int iter = 1; iter < num_size; ++iter) {
@@ -53,7 +53,8 @@ std::vector<int> insert_sort(std::vector<int> num) {
 
 /* 希尔排序
  *
- * 非稳定排序*/
+ * 非稳定排序
+ */
 std::vector<int> shell_sort(std::vector<int> num) {
   int h = 1, num_size = static_cast<int>(num.size());
   // 寻找最大的h
@@ -71,7 +72,8 @@ std::vector<int> shell_sort(std::vector<int> num) {
 /* 归并排序：从高到低
  * 输入参数范围[low, high)
  *
- * 非稳定排序*/
+ * 非稳定排序
+ */
 void _merge_high_low(std::vector<int>& num, int low, int high) {
   if (low >= (high - 1)) return;
   int middle = low + (high - low) / 2;
@@ -87,7 +89,7 @@ std::vector<int> merge_high_low(std::vector<int> num) {
 }
 
 /* 归并排序：从低到高
- * */
+ */
 std::vector<int> merge_low_high(std::vector<int> num) {
   int nums_size = static_cast<int>(num.size());
   for (int sz = 2; sz <= nums_size; sz *= 2)
@@ -254,7 +256,7 @@ int middle_finder(const std::vector<int>& num) {
 
 /* 随机排序与快排的差别主要在于
  * partition的位置不是直接选择第一个，而是随机选择
- * */
+ */
 int _random_partition(std::vector<int>& nums, int low, int high) {
   std::swap(nums[low], nums[(rand() % (high - low)) + low]);
   return _partition(nums, low, high);
@@ -345,6 +347,15 @@ class rb_avl_tree_base {
       : val(value), parent(p), left(l), right(r), color(c) {}
 };
 
+/* 红黑树的性质：
+ * 1. 节点是红色或黑色。
+ * 2. 根是黑色。
+ * 3. 所有叶子都是黑色（叶子是NIL节点）。
+ * 4. 每个红色节点必须有两个黑色的子节点。（从每个叶子到根的所有路径上不能有两个连续的红色节点。）
+ * 5. 从任一节点到其每个叶子的所有简单路径都包含相同数目的黑色节点。
+ *
+ * 最重要的是 性质四 和 性质五
+ */
 class rb_tree {
  public:
   rb_tree();
@@ -396,7 +407,8 @@ void rb_tree::insert(int val) {
 /* 插入节点
  * 1. 寻找插入位置
  * 2. 默认节点颜色为红色
- * 3. 修复新插入的节点 */
+ * 3. 修复新插入的节点
+ */
 void rb_tree::insert(rb_avl_tree_base* node) {
   rb_avl_tree_base *iter = _root, *p = nullptr;
 
@@ -421,26 +433,55 @@ void rb_tree::insert(rb_avl_tree_base* node) {
 }
 
 /* 插入节点修复
- * 1.
- * */
+ * 1. 插入节点为根，颜色改为黑色
+ * 2. 插入节点的父节点是黑色的，则插入完成
+ * 3. 插入节点的父节点是红色的，需要修复，且继续向上调整，直到到达根 或 满足性质
+ * 4. 如果根修改之后为红色，需要更改根节点颜色
+ */
 void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
   while (node->parent != nullptr && node->parent->color == _rb_tree_color::_red) {
+    // 当前节点为红色，且其父节点也为红色
     if (node->parent == node->parent->parent->left) {
+      // 当前父亲节点位于祖父节点的左子树上
       auto tmp_right = node->parent->parent->right;
       if (tmp_right != nullptr && tmp_right->color == _rb_tree_color::_red) {
+        // 叔父节点同样为红色 重新着色 当前节点置为祖父节点
+        /*      黑             红
+         *     / \            / \
+         *    红  红 =>      黑  黑
+         *   /              /
+         *  红             红
+         */
         node->parent->color = _rb_tree_color::_black;
         tmp_right->color = _rb_tree_color::_black;
         node->parent->parent->color = _rb_tree_color::_red;
         node = node->parent->parent;
       } else if (node == node->parent->right) {
+        // 叔父节点颜色 不知道 或 黑色
+        // 当前节点是父节点的右孩子 且 父节点是 祖父节点的左孩子
+        /*      黑            黑
+         *     /             /
+         *    红    =>      红
+         *     \           /
+         *      红        红  <= node
+         */
         node = node->parent;
         _left_rotate(node);
       } else {
+        // 叔父节点颜色 不知道 或 黑色
+        // 当前节点是父节点的右孩子 且 父节点是 祖父节点的左孩子
+        /*      黑             红                   黑
+         *     / \            / \                 / \
+         *    红  黑   =>    黑   黑   =>  node=> 红  红
+         *   /              /                        \
+         *  红             红  <= node                黑
+         */
         node->parent->color = _rb_tree_color::_black;
         node->parent->parent->color = _rb_tree_color::_red;
         _right_rotate(node->parent->parent);
       }
-    } else {  // the right part
+    } else {
+      // 当前父亲节点位于祖父节点的右子树上
       auto tmp_left = node->parent->parent->left;
       if (tmp_left != nullptr && tmp_left->color == _rb_tree_color::_red) {
         node->parent->color = _rb_tree_color::_black;
@@ -457,9 +498,11 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
       }
     }
   }
+  // 保证根节点的颜色为黑
   _root->color = _rb_tree_color::_black;
 }
 
+/* 左旋 相当于 RR旋转 */
 void rb_tree::_left_rotate(rb_avl_tree_base* node) {
   auto tmp = node->right;
   node->right = tmp->left;
@@ -475,6 +518,7 @@ void rb_tree::_left_rotate(rb_avl_tree_base* node) {
   node->parent = tmp;
 }
 
+/* 右旋 相当于 LL旋转 */
 void rb_tree::_right_rotate(rb_avl_tree_base* node) {
   auto tmp = node->left;
   node->left = tmp->right;
@@ -636,11 +680,12 @@ void rb_tree::bfs() {
   }
 }
 
+/* 节点的前序遍历非递归版本 */
 void rb_tree::dfs() {
   std::stack<rb_avl_tree_base*> stack;
   stack.push(_root);
 
-  while (!stack.empty()) {
+  while (stack.empty() == false) {
     auto curr_node = stack.top();
     std::cout << "  " << stack.top()->val << " | "
               << (stack.top()->color == _rb_tree_color::_red ? "red" : "black") << std::endl;
