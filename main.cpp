@@ -701,7 +701,9 @@ class tree_avl {
 
  private:
   void _insert_fixup(avl_tree_base* node);
-  void _delete_fixup(avl_tree_base* node);
+  void _delete_fixup(avl_tree_base* node, int left);
+
+  avl_tree_base* _find_max(avl_tree_base* node);
 
   avl_tree_base* _rotate_ll(avl_tree_base* node);
   avl_tree_base* _rotate_rl(avl_tree_base* node);
@@ -788,6 +790,7 @@ avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
     _root = node->right;
     ret = _root;
   } else {
+    // 父节点挂载子树
     ret = node->right;
     if (node->parent->left == node)
       node->parent->left = ret;
@@ -798,6 +801,7 @@ avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
   ret->parent = node->parent;
   node->parent = ret;
   node->right = ret->left;
+  if (ret->left != nullptr) ret->left->parent = node;
   ret->left = node;
 
   // 更正平衡因子
@@ -855,8 +859,9 @@ avl_tree_base* tree_avl::_rotate_ll(avl_tree_base* node) {
   }
 
   ret->parent = node->parent;
-  node->left = ret->right;
   node->parent = ret;
+  node->left = ret->right;
+  if (ret->right != nullptr) ret->right->parent = node;
   ret->right = node;
 
   // 更正平衡因子
@@ -914,13 +919,130 @@ int tree_avl::_get_height(avl_tree_base* node) {
 
 void tree_avl::delete_val(int val) { delete_node(search_val(val)); }
 
-// todo: avl树删除节点
+/* 删除节点三种情况：
+ * 1. 叶子节点，直接删除
+ * 2. 只有一颗子树，提升子树，并更新平衡因子
+ * 3. 有两颗子树，选择左子树中最大的一个替换当前节点，并更新平衡因子
+ * */
 void tree_avl::delete_node(avl_tree_base* node) {
   if (node == nullptr) return;
+  // 如果存在父节点，将父节点的孩子节点置为空，并指示左右 -1 左 1 右 0 不存在
+  int left = 0;
+  auto node_parent = node->parent;
+  if (node_parent != nullptr) {
+    if (node_parent->left == node) {
+      node_parent->left = nullptr;
+      left = -1;
+    } else {
+      node_parent->right = nullptr;
+      left = 1;
+    }
+  }
+  // 后两种情况
+  if (node->left == nullptr && node->right != nullptr) {
+    // 子树指向父节点 且 父节点链接子树
+    node->right->parent = node_parent;
+    if (left != 0 && left == 1)
+      node_parent->right = node->right;
+    else if (left != 0 && left == -1)
+      node_parent->left = node->right;
+
+    // 子树节点挂载
+    node->right->parent = node_parent;
+    // 当前节点变更为叶子节点
+    node->right = nullptr;
+  } else if (node->left != nullptr && node->right == nullptr) {
+    node->left->parent = node_parent;
+    if (left != 0 && left == 1)
+      node_parent->right = node->left;
+    else if (left != 0 && left == -1)
+      node_parent->left = node->left;
+    node->left->parent = node_parent;
+    node->left = nullptr;
+  } else if (node->left != nullptr && node->right != nullptr) {
+    // 找到左子树中最大的一个
+    auto node_max = _find_max(node->left);
+    if (left == 0)
+      // 置换根节点
+      _root = node_max;
+    // 替换当前节点
+    node_max->left = node->left;
+    node_max->right = node->right;
+    node_max->balance_factor = node->balance_factor;
+
+    node->left->parent = node_max;
+    node->right->parent = node_max;
+
+    node->left = nullptr;
+    node->right = nullptr;
+
+    node->parent = node_max->parent;
+
+    if (node_max->parent->left == node_max)
+      node_max->parent->left = node;
+    else
+      node_max->parent->right = node;
+
+    node_max->parent = node_parent;
+
+    // 父节点挂载
+    if (left != 0 && left == 1)
+      node_parent->right = node_max;
+    else if (left != 0 && left == -1)
+      node_parent->left = node_max;
+  }
+  // 要删除的节点变为叶子节点 直接删除
+  _delete_fixup(node, left);
 }
 
-// todo: avl树删除节点修复
-void tree_avl::_delete_fixup(avl_tree_base* node) {}
+// left指示当前节点是父节点的左右孩子 -1 左 1 右 0 不存在父节点
+void tree_avl::_delete_fixup(avl_tree_base* node, int left) {
+  // 删除当前节点，并向上修复平衡因子
+  // 卸载父节点的指引
+  if (node != nullptr && left != 0 && node->parent->left == node)
+    node->parent->left = nullptr;
+  else if (node != nullptr && left != 0 && node->parent->right == node)
+    node->parent->right = nullptr;
+  else if (left == 0)
+    // 当前节点为根节点
+    _root = nullptr;
+  auto iter_node = node->parent;
+  delete node;
+
+  // 向上修改平衡因子
+  while (iter_node != nullptr) {
+    // 修改当前节点的平衡因子
+    iter_node->balance_factor = _get_height(iter_node->left) - _get_height(iter_node->right);
+    /* 三种情况
+     * 1. 当前节点的平衡因子为 -1 或 1 表明当前节点的高度并没有变化
+     * 2. 当前节点的平衡银子为 2 或 -2 节点已经失衡 需要调整
+     *    2.1 平衡因子为 2 左孩子节点的平衡因子为 0 或 -1 则 LR旋转 左孩子节点为 1 则LL旋转
+     *    2.2 平衡因子为 -2 右孩子节点的平衡因子为 0 或 1 则 RL旋转，右孩子为 -1 则RR旋转　
+     * 3. 当前节点的平衡因子为 0 表明 子树高度减少，应当向上修改平衡因子
+     * */
+    if (iter_node->balance_factor == -1 || iter_node->balance_factor == 1)
+      break;
+    else if (iter_node->balance_factor == 2) {
+      if (iter_node->left->balance_factor == 1)
+        _rotate_ll(iter_node);
+      else
+        _rotate_lr(iter_node);
+    } else if (iter_node->balance_factor == -2) {
+      if (iter_node->balance_factor == -1)
+        _rotate_rr(iter_node);
+      else
+        _rotate_rl(iter_node);
+    } else if (iter_node->balance_factor == 0) {
+      iter_node = iter_node->parent;
+    }
+  }
+}
+
+/* 返回当前树中的最大值节点 */
+avl_tree_base* tree_avl::_find_max(avl_tree_base* node) {
+  while (node->right != nullptr) node = node->right;
+  return node;
+}
 
 avl_tree_base* tree_avl::search_val(int val) {
   avl_tree_base* iter = _root;
@@ -970,6 +1092,9 @@ void test_avl_tree() {
     std::cout << num << " ";
   }
   std::cout << std::endl;
+
+  for (auto iter = nums.rbegin(), iter_end = nums.rend() - 3; iter != iter_end; ++iter)
+    new_tree->delete_val(*iter);
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
