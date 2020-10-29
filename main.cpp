@@ -977,45 +977,43 @@ void tree_avl::delete_node(avl_tree_base* node) {
 
 // left指示当前节点是父节点的左右孩子 -1 左 1 右 0 不存在父节点
 void tree_avl::_delete_fixup(avl_tree_base* node, int left) {
-  // 删除当前节点，并修复平衡因子
-  // 修复当前节点父节点的平衡因子
-  if (left != 0) node->parent->balance_factor += left;
-  if (node->parent->left == node)
+  // 删除当前节点，并向上修复平衡因子
+  // 卸载父节点的指引
+  if (node != nullptr && left != 0 && node->parent->left == node)
     node->parent->left = nullptr;
-  else
+  else if (node != nullptr && left != 0 && node->parent->right == node)
     node->parent->right = nullptr;
-  auto tmp = node;
-  node = node->parent;
-  delete (tmp);
-
-  // todo: 只删除右子树，会出现不均衡。
+  else if (left == 0)
+    // 当前节点为根节点
+    _root = nullptr;
+  auto iter_node = node->parent;
+  delete node;
 
   // 向上修改平衡因子
-  auto iter_node = node->parent;
   while (iter_node != nullptr) {
+    // 修改当前节点的平衡因子
     iter_node->balance_factor = _get_height(iter_node->left) - _get_height(iter_node->right);
-    if (iter_node->balance_factor == -1 || iter_node->balance_factor == 1 ||
-        iter_node->balance_factor == 0) {
-      node = iter_node;
-      iter_node = node->parent;
-    } else if (iter_node->balance_factor == 2) {
-      if (node->balance_factor == 1) {
+    /* 三种情况
+     * 1. 当前节点的平衡因子为 -1 或 1 表明当前节点的高度并没有变化
+     * 2. 当前节点的平衡银子为 2 或 -2 节点已经失衡 需要调整
+     *    2.1 平衡因子为 2 左孩子节点的平衡因子为 0 或 -1 则 LR旋转 左孩子节点为 1 则LL旋转
+     *    2.2 平衡因子为 -2 右孩子节点的平衡因子为 0 或 1 则 RL旋转，右孩子为 -1 则RR旋转　
+     * 3. 当前节点的平衡因子为 0 表明 子树高度减少，应当向上修改平衡因子
+     * */
+    if (iter_node->balance_factor == -1 || iter_node->balance_factor == 1)
+      break;
+    else if (iter_node->balance_factor == 2) {
+      if (iter_node->left->balance_factor == 1)
         _rotate_ll(iter_node);
-        iter_node = node->parent;
-      } else {
+      else
         _rotate_lr(iter_node);
-        iter_node = iter_node->parent->parent;
-        node = node->parent;
-      }
     } else if (iter_node->balance_factor == -2) {
-      if (node->balance_factor == -1) {
+      if (iter_node->balance_factor == -1)
         _rotate_rr(iter_node);
-        iter_node = node->parent;
-      } else {
+      else
         _rotate_rl(iter_node);
-        iter_node = iter_node->parent->parent;
-        node = node->parent;
-      }
+    } else if (iter_node->balance_factor == 0) {
+      iter_node = iter_node->parent;
     }
   }
 }
@@ -1075,7 +1073,8 @@ void test_avl_tree() {
   }
   std::cout << std::endl;
 
-  for (auto iter = nums.rbegin(); iter != nums.rend(); ++iter) new_tree->delete_val(*iter);
+  for (auto iter = nums.rbegin(), iter_end = nums.rend() - 3; iter != iter_end; ++iter)
+    new_tree->delete_val(*iter);
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
