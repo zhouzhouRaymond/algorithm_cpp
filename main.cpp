@@ -389,41 +389,14 @@ rb_tree::rb_tree() : _root(nullptr) {}
 
 rb_tree::rb_tree(rb_avl_tree_base* root) : _root(root) {}
 
-void rb_tree::_left_rotate(rb_avl_tree_base* node) {
-  auto tmp = node->right;
-  node->right = tmp->left;
-  if (tmp->left != nullptr) tmp->left->parent = node;
-  tmp->parent = node->parent;
-  if (node->parent == nullptr)
-    _root = tmp;
-  else if (node == node->parent->left)
-    node->parent->left = tmp;
-  else
-    node->parent->right = tmp;
-  tmp->left = node;
-  node->parent = tmp;
-}
-
-void rb_tree::_right_rotate(rb_avl_tree_base* node) {
-  auto tmp = node->left;
-  node->left = tmp->right;
-  if (tmp->right != nullptr) tmp->right->parent = node;
-  tmp->parent = node->parent;
-  if (node->parent == nullptr)
-    _root = tmp;
-  else if (node == node->parent->left)
-    node->parent->left = tmp;
-  else
-    node->parent->right = tmp;
-  tmp->right = node;
-  node->parent = tmp;
-}
-
 void rb_tree::insert(int val) {
-  auto new_node = new rb_avl_tree_base(val, nullptr, nullptr, nullptr, _rb_tree_color::_red);
-  insert(new_node);
+  insert(new rb_avl_tree_base(val, nullptr, nullptr, nullptr, _rb_tree_color::_red));
 }
 
+/* 插入节点
+ * 1. 寻找插入位置
+ * 2. 默认节点颜色为红色
+ * 3. 修复新插入的节点 */
 void rb_tree::insert(rb_avl_tree_base* node) {
   rb_avl_tree_base *iter = _root, *p = nullptr;
 
@@ -447,6 +420,9 @@ void rb_tree::insert(rb_avl_tree_base* node) {
   _insert_fixup(node);
 }
 
+/* 插入节点修复
+ * 1.
+ * */
 void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
   while (node->parent != nullptr && node->parent->color == _rb_tree_color::_red) {
     if (node->parent == node->parent->parent->left) {
@@ -484,12 +460,42 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
   _root->color = _rb_tree_color::_black;
 }
 
+void rb_tree::_left_rotate(rb_avl_tree_base* node) {
+  auto tmp = node->right;
+  node->right = tmp->left;
+  if (tmp->left != nullptr) tmp->left->parent = node;
+  tmp->parent = node->parent;
+  if (node->parent == nullptr)
+    _root = tmp;
+  else if (node == node->parent->left)
+    node->parent->left = tmp;
+  else
+    node->parent->right = tmp;
+  tmp->left = node;
+  node->parent = tmp;
+}
+
+void rb_tree::_right_rotate(rb_avl_tree_base* node) {
+  auto tmp = node->left;
+  node->left = tmp->right;
+  if (tmp->right != nullptr) tmp->right->parent = node;
+  tmp->parent = node->parent;
+  if (node->parent == nullptr)
+    _root = tmp;
+  else if (node == node->parent->left)
+    node->parent->left = tmp;
+  else
+    node->parent->right = tmp;
+  tmp->right = node;
+  node->parent = tmp;
+}
+
+void rb_tree::delete_node(int val) { delete_node(search(val)); }
+
 // todo: 红黑树删除节点
 void rb_tree::delete_node(rb_avl_tree_base* node) {
   if (node == nullptr) return;
 }
-
-void rb_tree::delete_node(int val) { delete_node(search(val)); }
 
 // todo: 红黑树删除节点修复
 void rb_tree::_delete_fixup(rb_avl_tree_base* node) {}
@@ -727,6 +733,7 @@ tree_avl::tree_avl(avl_tree_base* root) : _root(root) {}
 
 void tree_avl::insert_val(int val) { insert_node(new avl_tree_base(val)); }
 
+/* 插入节点并修复新插入的节点 */
 void tree_avl::insert_node(avl_tree_base* node) {
   avl_tree_base *iter = _root, *p = nullptr;
 
@@ -749,6 +756,15 @@ void tree_avl::insert_node(avl_tree_base* node) {
   _insert_fixup(node);
 }
 
+/* 插入节点的修复操作
+ * 1. 更新节点的平衡因子
+ * 2. 平衡因子为 0 表明新插入的节点不会导致树高度的增加 所以不需要向上传播
+ * 3. 平衡因子为 1 或 -1 表明新插入的节点增加了树高，需要向上传播
+ * 4. 平衡因子为 2 或 -2 表明新插入的节点已经导致树失衡 需要调整
+ *    4.1 当前节点平衡因子为 2 子节点平衡因子为 1 则需要进行 LL旋转
+ *    4.2 当前节点平衡因子为 2 子节点平衡因子为 -1 或 0 则需要进行 LR旋转
+ *    4.3 当前节点平衡因子为 -2 子节点平衡因子为 -1 则需要进行 RR旋转
+ *    4.4 当前节点平衡因子为 -2 子节点平衡因子为 1 或 0 则需要进行 RL旋转 */
 void tree_avl::_insert_fixup(avl_tree_base* node) {
   avl_tree_base *p = node->parent, *iter = node;
   while (p) {
@@ -783,6 +799,13 @@ void tree_avl::_insert_fixup(avl_tree_base* node) {
   }
 }
 
+/* 右右双螺旋 返回节点B
+ *          A             B
+ *           \           / \
+ *            B         A  D
+ *           / \          /
+ *          C  D         C
+ */
 avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
   avl_tree_base* ret = nullptr;
   if (node->parent == nullptr) {
@@ -810,6 +833,13 @@ avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
   return ret->right;
 }
 
+/* 右左双螺旋 返回节点C
+ *          A             C
+ *           \           / \
+ *           B          A  B
+ *          / \             \
+ *         C  D             D
+ * */
 avl_tree_base* tree_avl::_rotate_rl(avl_tree_base* node) {
   avl_tree_base* ret = nullptr;
 
@@ -844,6 +874,13 @@ avl_tree_base* tree_avl::_rotate_rl(avl_tree_base* node) {
   return ret;
 }
 
+/* 左左双螺旋 返回节点B
+ *          A             B
+ *         /             / \
+ *        B    =>       C  A
+ *       / \             \
+ *      C  D             D
+ */
 avl_tree_base* tree_avl::_rotate_ll(avl_tree_base* node) {
   avl_tree_base* ret = nullptr;
   if (node->parent == nullptr) {
@@ -870,6 +907,13 @@ avl_tree_base* tree_avl::_rotate_ll(avl_tree_base* node) {
   return ret->left;
 }
 
+/* 左右双螺旋 返回节点D
+ *          A             D
+ *         /             / \
+ *        B    =>       B  A
+ *       / \           /
+ *      C  D          C
+ */
 avl_tree_base* tree_avl::_rotate_lr(avl_tree_base* node) {
   avl_tree_base* ret = nullptr;
 
@@ -904,14 +948,17 @@ avl_tree_base* tree_avl::_rotate_lr(avl_tree_base* node) {
   return ret;
 }
 
+/* 更新旋转后的平衡因子 */
 void tree_avl::_update_bf(avl_tree_base* node) {
   node->balance_factor = _get_height(node->left) - _get_height(node->right);
   node->left->balance_factor = _get_height(node->left->left) - _get_height(node->left->right);
   node->right->balance_factor = _get_height(node->right->left) - _get_height(node->right->right);
 }
 
+/* 获取整体树高 */
 int tree_avl::get_height() { return _get_height(_root); }
 
+/* 递归获取当前节点的树高 */
 int tree_avl::_get_height(avl_tree_base* node) {
   if (node == nullptr) return 0;
   return std::max(_get_height(node->left), _get_height(node->right)) + 1;
@@ -1126,7 +1173,6 @@ void test() {
 }  // namespace test_new_feature
 
 int main() {
-  //  tiny_avl_tree::test::test_avl_tree();
-  tiny_sort::test::test_sort();
+  tiny_rb_tree::test::test_rb_tree();
   return 0;
 }
