@@ -258,7 +258,7 @@ int middle_finder(const std::vector<int>& num) {
  * partition的位置不是直接选择第一个，而是随机选择
  */
 int _random_partition(std::vector<int>& nums, int low, int high) {
-  std::swap(nums[low], nums[(rand() % (high - low)) + low]);
+  std::swap(nums[low], nums[(std::rand() % (high - low)) + low]);
   return _partition(nums, low, high);
 }
 
@@ -544,11 +544,25 @@ void rb_tree::delete_node(int val) { delete_node(search(val)); }
  */
 void rb_tree::delete_node(rb_tree_base* node) {
   if (node == nullptr) return;
+  // 当前节点为根节点
+
   // 对应下面的两种情况
   if (node->left != nullptr && node->right == nullptr) {
-    // 节点的左孩子不为空
+    // 节点的左孩子不为空 将此节点替换为左孩子节点
+    auto replace_node = node->left;
+    if (node->parent->left == node)
+      node->parent->left = replace_node;
+    else
+      node->parent->right = replace_node;
+    replace_node->parent = node->parent;
+    node->left = nullptr;
   } else if (node->left == nullptr && node->right != nullptr) {
     // 节点的右孩子不为空
+    auto replace_node = node->right;
+    if (node->parent->left == node)
+      node->parent->left = replace_node;
+    else
+      node->parent->right = replace_node;
   } else if (node->left != nullptr && node->right != nullptr) {
     // 节点的两个孩子都不为空
   }
@@ -866,8 +880,8 @@ void tree_avl::_insert_fixup(avl_tree_base* node) {
  *          A             B
  *           \           / \
  *            B         A  D
- *           / \          /
- *          C  D         C
+ *           / \       /
+ *          C  D      C
  */
 avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
   avl_tree_base* ret = nullptr;
@@ -924,6 +938,7 @@ avl_tree_base* tree_avl::_rotate_rl(avl_tree_base* node) {
 
   node->parent = ret;
   node->right = ret->left;
+  if (ret->left) ret->left->parent = node;
 
   tmp->parent = ret;
   tmp->left = ret->right;
@@ -998,6 +1013,7 @@ avl_tree_base* tree_avl::_rotate_lr(avl_tree_base* node) {
 
   node->parent = ret;
   node->left = ret->right;
+  if (ret->right) ret->right->parent = node;
 
   tmp->parent = ret;
   tmp->right = ret->left;
@@ -1113,10 +1129,20 @@ void tree_avl::_delete_fixup(avl_tree_base* node, int left) {
     node->parent->left = nullptr;
   else if (node != nullptr && left != 0 && node->parent->right == node)
     node->parent->right = nullptr;
-  else if (left == 0)
-    // 当前节点为根节点
+  else if (left == 0 && node->left == nullptr && node->right == nullptr &&
+           node->parent == nullptr) {
+    // 当前节点为根节点 且 没有剩余节点
     _root = nullptr;
+  }
   auto iter_node = node->parent;
+  if (left == 0 && get_height() != 0) {
+    // 当前节点为根节点 且 有剩余节点
+    if (iter_node->left == node)
+      iter_node->left = nullptr;
+    else
+      iter_node->right = nullptr;
+  }
+
   delete node;
 
   // 向上修改平衡因子
@@ -1203,8 +1229,12 @@ void test_avl_tree() {
   }
   std::cout << std::endl;
 
-  for (auto iter = nums.rbegin(), iter_end = nums.rend() - 3; iter != iter_end; ++iter)
-    new_tree->delete_val(*iter);
+  for (auto nums_max = *std::max_element(nums.begin(), nums.end()),
+            nums_min = *std::min_element(nums.begin(), nums.end());
+       new_tree->get_height() != 0;) {
+    int delete_num = (std::rand() % (nums_max - nums_min + 1)) + nums_min;
+    new_tree->delete_val(delete_num);
+  }
 
   std::cout << "pre_order: " << std::endl;
   new_tree->pre_order();
@@ -1236,6 +1266,7 @@ void test() {
 }  // namespace test_new_feature
 
 int main() {
-  tiny_rb_tree::test::test_rb_tree();
+  //  tiny_rb_tree::test::test_rb_tree();
+  tiny_avl_tree::test::test_avl_tree();
   return 0;
 }
