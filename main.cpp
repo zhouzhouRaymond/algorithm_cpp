@@ -333,17 +333,16 @@ void test_search() {
 namespace tiny_rb_tree {
 enum _rb_tree_color { _red, _black };
 
-class rb_avl_tree_base {
+class rb_tree_base {
  public:
   int val;
-  rb_avl_tree_base* parent;
-  rb_avl_tree_base* left;
-  rb_avl_tree_base* right;
+  rb_tree_base* parent;
+  rb_tree_base* left;
+  rb_tree_base* right;
   _rb_tree_color color;
 
-  explicit rb_avl_tree_base(int value = 0, rb_avl_tree_base* p = nullptr,
-                            rb_avl_tree_base* l = nullptr, rb_avl_tree_base* r = nullptr,
-                            _rb_tree_color c = _red)
+  explicit rb_tree_base(int value = 0, rb_tree_base* p = nullptr, rb_tree_base* l = nullptr,
+                        rb_tree_base* r = nullptr, _rb_tree_color c = _red)
       : val(value), parent(p), left(l), right(r), color(c) {}
 };
 
@@ -359,14 +358,14 @@ class rb_avl_tree_base {
 class rb_tree {
  public:
   rb_tree();
-  explicit rb_tree(rb_avl_tree_base* root);
+  explicit rb_tree(rb_tree_base* root);
 
-  void insert(rb_avl_tree_base* node);
+  void insert(rb_tree_base* node);
   void insert(int val);
-  void delete_node(rb_avl_tree_base* node);
+  void delete_node(rb_tree_base* node);
   void delete_node(int val);
 
-  rb_avl_tree_base* search(int value);
+  rb_tree_base* search(int value);
 
   void pre_order();
   void in_order();
@@ -380,28 +379,30 @@ class rb_tree {
   void dfs();
 
  private:
-  void _left_rotate(rb_avl_tree_base* node);
-  void _right_rotate(rb_avl_tree_base* node);
+  void _left_rotate(rb_tree_base* node);
+  void _right_rotate(rb_tree_base* node);
 
-  void _insert_fixup(rb_avl_tree_base* node);
-  void _delete_fixup(rb_avl_tree_base* node);
-  void _delete_transplant(rb_avl_tree_base* node, rb_avl_tree_base* new_node);
+  void _insert_fixup(rb_tree_base* node);
+  void _delete_fixup(rb_tree_base* node);
 
-  void _pre_order(rb_avl_tree_base* node) const;
-  void _in_order(rb_avl_tree_base* node) const;
-  void _post_order(rb_avl_tree_base* node) const;
+  rb_tree_base* _find_max(rb_tree_base* node);
+  rb_tree_base* _find_min(rb_tree_base* node);
+
+  void _pre_order(rb_tree_base* node) const;
+  void _in_order(rb_tree_base* node) const;
+  void _post_order(rb_tree_base* node) const;
 
  public:
  private:
-  rb_avl_tree_base* _root;
+  rb_tree_base* _root;
 };
 
 rb_tree::rb_tree() : _root(nullptr) {}
 
-rb_tree::rb_tree(rb_avl_tree_base* root) : _root(root) {}
+rb_tree::rb_tree(rb_tree_base* root) : _root(root) {}
 
 void rb_tree::insert(int val) {
-  insert(new rb_avl_tree_base(val, nullptr, nullptr, nullptr, _rb_tree_color::_red));
+  insert(new rb_tree_base(val, nullptr, nullptr, nullptr, _rb_tree_color::_red));
 }
 
 /* 插入节点
@@ -409,8 +410,8 @@ void rb_tree::insert(int val) {
  * 2. 默认节点颜色为红色
  * 3. 修复新插入的节点
  */
-void rb_tree::insert(rb_avl_tree_base* node) {
-  rb_avl_tree_base *iter = _root, *p = nullptr;
+void rb_tree::insert(rb_tree_base* node) {
+  rb_tree_base *iter = _root, *p = nullptr;
 
   // 寻找插入位置
   while (iter != nullptr) {
@@ -438,7 +439,7 @@ void rb_tree::insert(rb_avl_tree_base* node) {
  * 3. 插入节点的父节点是红色的，需要修复，且继续向上调整，直到到达根 或 满足性质
  * 4. 如果根修改之后为红色，需要更改根节点颜色
  */
-void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
+void rb_tree::_insert_fixup(rb_tree_base* node) {
   while (node->parent != nullptr && node->parent->color == _rb_tree_color::_red) {
     // 当前节点为红色，且其父节点也为红色
     if (node->parent == node->parent->parent->left) {
@@ -503,7 +504,7 @@ void rb_tree::_insert_fixup(rb_avl_tree_base* node) {
 }
 
 /* 左旋 相当于 RR旋转 */
-void rb_tree::_left_rotate(rb_avl_tree_base* node) {
+void rb_tree::_left_rotate(rb_tree_base* node) {
   auto tmp = node->right;
   node->right = tmp->left;
   if (tmp->left != nullptr) tmp->left->parent = node;
@@ -519,7 +520,7 @@ void rb_tree::_left_rotate(rb_avl_tree_base* node) {
 }
 
 /* 右旋 相当于 LL旋转 */
-void rb_tree::_right_rotate(rb_avl_tree_base* node) {
+void rb_tree::_right_rotate(rb_tree_base* node) {
   auto tmp = node->left;
   node->left = tmp->right;
   if (tmp->right != nullptr) tmp->right->parent = node;
@@ -536,26 +537,43 @@ void rb_tree::_right_rotate(rb_avl_tree_base* node) {
 
 void rb_tree::delete_node(int val) { delete_node(search(val)); }
 
-// todo: 红黑树删除节点
-void rb_tree::delete_node(rb_avl_tree_base* node) {
+/* 删除节点的三种情况
+ * 1. 删除结点无子结点，直接删除
+ * 2. 删除结点只有一个子结点，用子结点替换删除结点
+ * 3. 删除结点有两个子结点，用后继结点（小于删除结点的最大结点）替换删除结点
+ */
+void rb_tree::delete_node(rb_tree_base* node) {
   if (node == nullptr) return;
+  // 对应下面的两种情况
+  if (node->left != nullptr && node->right == nullptr) {
+    // 节点的左孩子不为空
+  } else if (node->left == nullptr && node->right != nullptr) {
+    // 节点的右孩子不为空
+  } else if (node->left != nullptr && node->right != nullptr) {
+    // 节点的两个孩子都不为空
+  }
+  // 叶子节点，直接删除
+  _delete_fixup(node);
 }
 
-// todo: 红黑树删除节点修复
-void rb_tree::_delete_fixup(rb_avl_tree_base* node) {}
+/* 直接删除传入的节点，此节点一定是叶子节点 */
+void rb_tree::_delete_fixup(rb_tree_base* node) {}
 
-void rb_tree::_delete_transplant(rb_avl_tree_base* node, rb_avl_tree_base* new_node) {
-  if (node->parent == nullptr)
-    _root = new_node;
-  else if (node == node->parent->left)
-    node->parent->left = new_node;
-  else
-    node->parent->right = new_node;
-  new_node->parent = node->parent;
+/* 查找当前子树中最大的节点 */
+rb_tree_base* rb_tree::_find_max(rb_tree_base* node) {
+  while (node != nullptr) node = node->right;
+  return node;
 }
 
-rb_avl_tree_base* rb_tree::search(int value) {
-  rb_avl_tree_base* iter = _root;
+/* 查找当前子树中最小的节点 */
+rb_tree_base* rb_tree::_find_min(rb_tree_base* node) {
+  while (node != nullptr) node = node->left;
+  return node;
+}
+
+/* 查找节点，找到即返回，找不到返回空 */
+rb_tree_base* rb_tree::search(int value) {
+  rb_tree_base* iter = _root;
   while (iter != nullptr) {
     if (iter->val == value)
       return iter;
@@ -570,10 +588,10 @@ rb_avl_tree_base* rb_tree::search(int value) {
 /* 1. 访问当前节点，并将节点入栈
  * 2. 当前节点左孩子为空，将当前节点替换为栈顶节点的右孩子节点，执行操作1
  * 3. 当前节点左孩子不为空，替换当前节点为左孩子节点，执行操作1
- * */
+ */
 void rb_tree::pre_order_for() {
   auto iter_node = _root;
-  std::stack<rb_avl_tree_base*> nodes;
+  std::stack<rb_tree_base*> nodes;
   while (iter_node != nullptr || nodes.empty() == false) {
     while (iter_node != nullptr) {
       std::cout << iter_node->val << " | "
@@ -595,7 +613,7 @@ void rb_tree::pre_order_for() {
  * */
 void rb_tree::in_order_for() {
   auto iter_node = _root;
-  std::stack<rb_avl_tree_base*> nodes;
+  std::stack<rb_tree_base*> nodes;
   while (iter_node != nullptr || nodes.empty() == false) {
     while (iter_node != nullptr) {
       nodes.push(iter_node);
@@ -617,8 +635,8 @@ void rb_tree::in_order_for() {
  * 否则 将当前节点的右左孩子依次入栈
  * */
 void rb_tree::post_order_for() {
-  rb_avl_tree_base *iter_node = nullptr, *pre = nullptr;
-  std::stack<rb_avl_tree_base*> nodes;
+  rb_tree_base *iter_node = nullptr, *pre = nullptr;
+  std::stack<rb_tree_base*> nodes;
   nodes.push(_root);
   while (nodes.empty() == false) {
     iter_node = nodes.top();
@@ -643,7 +661,7 @@ void rb_tree::in_order() { _in_order(_root); }
 
 void rb_tree::post_order() { _post_order(_root); }
 
-void rb_tree::_pre_order(rb_avl_tree_base* node) const {
+void rb_tree::_pre_order(rb_tree_base* node) const {
   if (node == nullptr) return;
   std::cout << "  " << node->val << " | "
             << ((node->color == _rb_tree_color::_red) ? "red" : "black") << std::endl;
@@ -651,7 +669,7 @@ void rb_tree::_pre_order(rb_avl_tree_base* node) const {
   _pre_order(node->right);
 }
 
-void rb_tree::_in_order(rb_avl_tree_base* node) const {
+void rb_tree::_in_order(rb_tree_base* node) const {
   if (node == nullptr) return;
   _in_order(node->left);
   std::cout << "  " << node->val << " | "
@@ -659,7 +677,7 @@ void rb_tree::_in_order(rb_avl_tree_base* node) const {
   _in_order(node->right);
 }
 
-void rb_tree::_post_order(rb_avl_tree_base* node) const {
+void rb_tree::_post_order(rb_tree_base* node) const {
   if (node == nullptr) return;
   _post_order(node->left);
   _post_order(node->right);
@@ -668,7 +686,7 @@ void rb_tree::_post_order(rb_avl_tree_base* node) const {
 }
 
 void rb_tree::bfs() {
-  std::queue<rb_avl_tree_base*> stack;
+  std::queue<rb_tree_base*> stack;
   stack.push(_root);
 
   while (!stack.empty()) {
@@ -682,7 +700,7 @@ void rb_tree::bfs() {
 
 /* 节点的前序遍历非递归版本 */
 void rb_tree::dfs() {
-  std::stack<rb_avl_tree_base*> stack;
+  std::stack<rb_tree_base*> stack;
   stack.push(_root);
 
   while (stack.empty() == false) {
