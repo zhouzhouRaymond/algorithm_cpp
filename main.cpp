@@ -383,7 +383,7 @@ class rb_tree {
   void _right_rotate(rb_tree_base* node);
 
   void _insert_fixup(rb_tree_base* node);
-  void _delete_fixup(rb_tree_base* node);
+  void _delete_fixup(rb_tree_base* node, int left, _rb_tree_color orgin_color);
 
   rb_tree_base* _find_max(rb_tree_base* node);
   rb_tree_base* _find_min(rb_tree_base* node);
@@ -446,7 +446,7 @@ void rb_tree::_insert_fixup(rb_tree_base* node) {
       // 当前父亲节点位于祖父节点的左子树上
       auto tmp_right = node->parent->parent->right;
       if (tmp_right != nullptr && tmp_right->color == _rb_tree_color::_red) {
-        // 叔父节点同样为红色 重新着色 当前节点置为祖父节点
+        // 叔父节点同样为红色 重新着色 当前节点迭代为祖父节点
         /*      黑             红
          *     / \            / \
          *    红  红 =>      黑  黑
@@ -505,34 +505,42 @@ void rb_tree::_insert_fixup(rb_tree_base* node) {
 
 /* 左旋 相当于 RR旋转 */
 void rb_tree::_left_rotate(rb_tree_base* node) {
-  auto tmp = node->right;
+  rb_tree_base* tmp = node->right;
+  if (node->parent == nullptr) {
+    // 当前节点为根节点
+    _root = tmp;
+  } else {
+    // 挂载父节点
+    if (node->parent->left == node)
+      node->parent->left = tmp;
+    else
+      node->parent->right = tmp;
+  }
+
+  tmp->parent = node->parent;
+  node->parent = tmp;
   node->right = tmp->left;
   if (tmp->left != nullptr) tmp->left->parent = node;
-  tmp->parent = node->parent;
-  if (node->parent == nullptr)
-    _root = tmp;
-  else if (node == node->parent->left)
-    node->parent->left = tmp;
-  else
-    node->parent->right = tmp;
   tmp->left = node;
-  node->parent = tmp;
 }
 
 /* 右旋 相当于 LL旋转 */
 void rb_tree::_right_rotate(rb_tree_base* node) {
-  auto tmp = node->left;
+  rb_tree_base* tmp = node->left;
+  if (node->parent == nullptr) {
+    _root = tmp;
+  } else {
+    if (node->parent->left == node)
+      node->parent->left = tmp;
+    else
+      node->parent->right = tmp;
+  }
+
+  tmp->parent = node->parent;
+  node->parent = tmp;
   node->left = tmp->right;
   if (tmp->right != nullptr) tmp->right->parent = node;
-  tmp->parent = node->parent;
-  if (node->parent == nullptr)
-    _root = tmp;
-  else if (node == node->parent->left)
-    node->parent->left = tmp;
-  else
-    node->parent->right = tmp;
   tmp->right = node;
-  node->parent = tmp;
 }
 
 void rb_tree::delete_node(int val) { delete_node(search(val)); }
@@ -541,37 +549,119 @@ void rb_tree::delete_node(int val) { delete_node(search(val)); }
  * 1. 删除结点无子结点，直接删除
  * 2. 删除结点只有一个子结点，用子结点替换删除结点
  * 3. 删除结点有两个子结点，用后继结点（小于删除结点的最大结点）替换删除结点
+ * 最后修复节点颜色
  */
 void rb_tree::delete_node(rb_tree_base* node) {
+  _rb_tree_color orgin_color = node->color;
   if (node == nullptr) return;
-  // 当前节点为根节点
+  // 如果存在父节点，将父节点的孩子节点置为空，并指示左右 -1 左 1 右 0 不存在
+  rb_tree_base* node_parent = node->parent;
+  int left = 0;
+  // 卸载父节点
+  if (node->parent != nullptr) {
+    if (node->parent->left == node) {
+      node->parent->left = nullptr;
+      left = -1;
+    } else {
+      node->parent->right = nullptr;
+      left = 1;
+    }
+  }
 
   // 对应下面的两种情况
   if (node->left != nullptr && node->right == nullptr) {
     // 节点的左孩子不为空 将此节点替换为左孩子节点
-    auto replace_node = node->left;
-    if (node->parent->left == node)
-      node->parent->left = replace_node;
+    node->left->parent = node_parent;
+    if (left != 0 && left == -1)
+      node_parent->left = node->left;
     else
-      node->parent->right = replace_node;
-    replace_node->parent = node->parent;
+      node_parent->right = node->left;
+
+    node->left->parent = node_parent;
     node->left = nullptr;
   } else if (node->left == nullptr && node->right != nullptr) {
     // 节点的右孩子不为空
-    auto replace_node = node->right;
-    if (node->parent->left == node)
-      node->parent->left = replace_node;
+    node->left->parent = node_parent;
+    if (left != 0 && left == -1)
+      node_parent->left = node->right;
     else
-      node->parent->right = replace_node;
+      node_parent->right = node->right;
+
+    node->right->parent = node_parent;
+    node->right = nullptr;
   } else if (node->left != nullptr && node->right != nullptr) {
-    // 节点的两个孩子都不为空
+    // 节点的两个孩子都不为空 找到左子树中最大的孩子节点
+    rb_tree_base* node_max = _find_max(node->left);
+
+    auto node_max_color = node_max->color;
+
+    // 置换根节点
+    if (left == 0) _root = node_max;
+
+    node_max->left = node->left;
+    node_max->right = node->right;
+    node_max->color = node->color;
+
+    node->left->parent = node_max;
+    node->right->parent = node_max;
+
+    node->left = nullptr;
+    node->right = nullptr;
+    node->parent = node_max->parent;
+    node->color = node_max_color;
+
+    if (node_max->parent->left == node_max)
+      node_max->parent->left = node;
+    else
+      node_max->parent->right = node;
+
+    node_max->parent = node_parent;
+
+    if (left != 0 && left == 1)
+      node_parent->right = node_max;
+    else if (left != 0 && left == -1)
+      node_parent->left = node_max;
   }
   // 叶子节点，直接删除
-  _delete_fixup(node);
+  _delete_fixup(node, left, orgin_color);
 }
 
-/* 直接删除传入的节点，此节点一定是叶子节点 */
-void rb_tree::_delete_fixup(rb_tree_base* node) {}
+/* 直接删除传入的节点，此节点一定是叶子节点
+ * left != 0 传入节点的颜色为原始颜色
+ * left == 0 传入节点的颜色为替换节点的颜色
+ * orgin_color 表示要删除节点原来的颜色
+ *
+ * 1. 原来即是红色叶子节点 直接删除
+ */
+void rb_tree::_delete_fixup(rb_tree_base* node, int left, _rb_tree_color orgin_color) {
+  // 删除当前节点，并向上修复红黑树
+  // 卸载父节点 left != 0 已经在删除中卸载
+  rb_tree_base* iter_node = node->parent;
+
+  if (left == 0 && node->left == nullptr && node->right == nullptr && node->parent == nullptr)
+    // 已经没有剩余节点
+    _root = nullptr;
+  else if (left == 0 && _root != nullptr) {
+    // 当前为为根节点，但是有剩余
+    if (iter_node->left == node)
+      iter_node->left = nullptr;
+    else
+      iter_node->right = nullptr;
+  }
+  // 记录删除节点的颜色
+  auto node_color = node->color;
+  delete node;
+  if (left != 0 && orgin_color == _rb_tree_color::_red && iter_node->left == nullptr &&
+      iter_node->right == nullptr) {
+    // 删除的节点为红色 且 是叶子节点
+    return;
+  } else if () {
+  }
+
+  // 向上修复颜色
+  while (iter_node != nullptr) {
+  }
+}
 
 /* 查找当前子树中最大的节点 */
 rb_tree_base* rb_tree::_find_max(rb_tree_base* node) {
@@ -884,14 +974,12 @@ void tree_avl::_insert_fixup(avl_tree_base* node) {
  *          C  D      C
  */
 avl_tree_base* tree_avl::_rotate_rr(avl_tree_base* node) {
-  avl_tree_base* ret = nullptr;
+  avl_tree_base* ret = node->right;
   if (node->parent == nullptr) {
     // 如果当前节点为根节点
-    _root = node->right;
-    ret = _root;
+    _root = ret;
   } else {
     // 父节点挂载子树
-    ret = node->right;
     if (node->parent->left == node)
       node->parent->left = ret;
     else
@@ -960,13 +1048,11 @@ avl_tree_base* tree_avl::_rotate_rl(avl_tree_base* node) {
  *      C  D             D
  */
 avl_tree_base* tree_avl::_rotate_ll(avl_tree_base* node) {
-  avl_tree_base* ret = nullptr;
+  avl_tree_base* ret = node->left;
   if (node->parent == nullptr) {
     // 如果当前节点为根节点
-    _root = node->left;
-    ret = _root;
+    _root = ret;
   } else {
-    ret = node->left;
     if (node->parent->left == node)
       node->parent->left = ret;  // 当前节点为父节点的左节点
     else
@@ -1054,7 +1140,7 @@ void tree_avl::delete_node(avl_tree_base* node) {
   if (node == nullptr) return;
   // 如果存在父节点，将父节点的孩子节点置为空，并指示左右 -1 左 1 右 0 不存在
   int left = 0;
-  auto node_parent = node->parent;
+  avl_tree_base* node_parent = node->parent;
   if (node_parent != nullptr) {
     if (node_parent->left == node) {
       node_parent->left = nullptr;
@@ -1129,14 +1215,14 @@ void tree_avl::_delete_fixup(avl_tree_base* node, int left) {
     node->parent->left = nullptr;
   else if (node != nullptr && left != 0 && node->parent->right == node)
     node->parent->right = nullptr;
-  else if (left == 0 && node->left == nullptr && node->right == nullptr &&
-           node->parent == nullptr) {
+  else if (left == 0 && node->left == nullptr && node->right == nullptr && node->parent == nullptr)
     // 当前节点为根节点 且 没有剩余节点
     _root = nullptr;
-  }
+
   auto iter_node = node->parent;
-  if (left == 0 && get_height() != 0) {
+  if (left == 0 && _root != nullptr) {
     // 当前节点为根节点 且 有剩余节点
+    // 替换位置的节点 解除其父节点的挂载
     if (iter_node->left == node)
       iter_node->left = nullptr;
     else
