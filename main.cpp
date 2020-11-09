@@ -1125,8 +1125,80 @@ void test() {
 }
 }  // namespace test_new_feature
 
+namespace effective_cxx {
+void test_01() {}
+
+void test_02() {
+  // 1. class 专属常量需要在实现文件中初始化 或 直接在声明时初始化
+  // class game_player{
+  // private:
+  // static const int num_turns;
+  // };
+
+  // const int game_player::num_turns = 5;
+
+  // 2. 采用inline函数替换#define
+}
+
+void test_03() {
+  // 1. const修饰的类型
+  //  char greeting[] = "hello";
+  //  char* p = greeting;              // non-const pointer, non-const data
+  //  const char* p = greeting;        // non-const pointer, const data
+  //  char const* p = greeting;        // non-const pointer, const data
+  //  char* const p = greeting;        // const pointer, non-const data
+  //  const char* const p = greeting;  // const pointer, const data
+
+  //  std::vector<int> vec{1, 2};
+  //  const std::vector<int>::iterator iter = vec.begin();  // T * const iter  const-point
+  //  *iter = 10;
+  //  ++iter;
+
+  //  std::vector<int>::const_iterator const_date = vec.cbegin();  // const-date
+  //  *const_iter = 10;
+  //  ++const_date;
+
+  //  const std::vector<int>::const_iterator const_iter_date = vec.cbegin();  // const-point
+  //  const-date *const_iter_date = 10;
+  //  ++const_iter_date;
+
+  // 3. 非const版本修饰一下调用const版本
+  //  const_cast<char &>(static_cast<const testblack&>(*this))[position];
+}
+
+void test_04() {
+  //  int a = 0;  // 1. 手动初始化内置类型
+  //  class teee {
+  //   public:
+  //    int a, b, c;
+  //    teee(int _a, int _b, int _c) : a(_a), b(_b), c(_c) {}  // 2. 采用列表初始化，次序与声明相同
+  //  };
+
+  //  3. non-local static 类型需要保证一方在另一方之前初始化
+
+  //  class file_system {
+  //    std::size_t num_disks() const;
+  //  };
+
+  //  file_system& tfs() {
+  //    static file_system fs;
+  //    return fs;
+  //  };
+
+  //  class directory {
+  //   public:
+  //    directory() { std::size_t disks = tfs().num_disks(); }
+  //  };
+  //  directory & temp_dir(){
+  //    static directory td;
+  //    return td;
+  //  }
+}
+}  // namespace effective_cxx
+
 int main() {
   //  tiny_avl_tree::test::test_avl_tree();
-  tiny_sort::test::test_sort();
+  //  tiny_sort::test::test_sort();
+  effective_cxx::test_03();
   return 0;
 }
