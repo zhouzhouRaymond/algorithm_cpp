@@ -1194,6 +1194,74 @@ void test_04() {
   //    return td;
   //  }
 }
+
+void test_05() {
+  // 1. 默认创建的函数
+  // class empty{}; =>
+  // class empty{
+  //  empty(){}                             // 默认构造函数
+  //  empty(const empty& rhs){}             // copy构造函数
+  //  ~empty(){}                            // 默认析构函数
+  //  empty& operator=(const empty& rhs){}  // 拷贝赋值函数
+  // };
+}
+
+void test_06() {
+  // 1. 阻止某个类中的拷贝构造函数、拷贝赋值函数 只有声明没有定义
+  // class home{
+  //  private:
+  //    home(const home& rhs);
+  //    home& operator=(const home& rhs);
+  // };
+
+  // 2. 创建一个不允许拷贝赋值的基类 需注意多重继承问题
+  // class uncopyable{
+  //   public:
+  //     uncopyable() {}
+  //     ~uncopyable() {}
+  //   private:
+  //   uncopyable(const uncopyable& rhs);
+  //   uncopyable& operator=(const uncopyable& rhs);
+  // };
+
+  // class home : private uncopyable {}
+}
+
+void test_07() {
+  // 1. 用作基类使用，需要将析构函数设置为 vitual
+  //    类成员函数有vitual则析构函数也需要设置为vitual
+}
+
+void test_08() {
+  // 1. 在析构函数中处理所以异常
+  // 2. 应该提供一个普通的函数，操作容易出现异常的部分
+}
+
+void test_09() {
+  // 1. 禁止在构造函数和析构函数中调用virtual函数
+}
+
+void test_10() {
+  // 1. 赋值运算符 需要返回操作符左侧的对象
+  // 2. 同样适用于所有带赋值操作的运算符
+}
+
+void test_11() {
+  // 1. 在赋值运算符中处理自我赋值问题
+  // if (this = rhs) return * this;
+  // 如果需要析构操作
+  // 需要先保存原有的位置，构建一个副本指向它，析构掉原来的。
+
+  // 2. 使用copy and swap方法处理赋值
+  // pass by value
+  // swap(*this, rhs); return *this;
+}
+
+void test_12() {
+  // 1. 拷贝类中的每一个成员
+  // 2. 不要尝试使用copying函数调用另一个copying函数
+}
+
 }  // namespace effective_cxx
 
 int main() {
