@@ -1114,15 +1114,15 @@ class point2d {
 };
 // todo: 增加view视图特性
 
-void test() {
-  // 列表初始化
-  point2d new_point{.x = 1, .y = 4, .z = 3};
-  std::cout << new_point.x << " | " << new_point.y << " | " << new_point.z << std::endl;
-  std::vector<int> ints{0, 1, 2, 3, 4, 5};
-  for (int i : ints | std::views::filter([](int i) { return i % 2 == 0; }) |
-                   std::views::transform([](int i) { return i * i; }))
-    std::cout << i << std::endl;
-}
+// void test() {
+//  // 列表初始化
+//  point2d new_point{.x = 1, .y = 4, .z = 3};
+//  std::cout << new_point.x << " | " << new_point.y << " | " << new_point.z << std::endl;
+//  std::vector<int> ints{0, 1, 2, 3, 4, 5};
+//  for (int i : ints | std::views::filter([](int i) { return i % 2 == 0; }) |
+//                   std::views::transform([](int i) { return i * i; }))
+//    std::cout << i << std::endl;
+//}
 }  // namespace test_new_feature
 
 namespace effective_cxx {
@@ -1262,6 +1262,62 @@ void test_12() {
   // 2. 不要尝试使用copying函数调用另一个copying函数
 }
 
+void test_13() {
+  // 1. 获得资源后立刻放进管理对象。
+  // 2. 管理对象运用析构函数确保资源被释放。
+  // shared_ptr 是较优的选择 auto_ptr 使用的都是delete 不能首先数组的析构
+}
+
+void test_14() {
+  // 在shared_ptr或者auto_ptr中需要仔细考虑copying行为
+  // 普遍的copy行为是抑制copy 或 施加引用计数法
+}
+
+void test_15() {
+  // 隐式转换函数
+  // operator a() cosnt ( return f;)
+  // 每一个管理资源的类必须提供一个取得原始资源的方法
+  // 显示转换是较为安全的形式，隐式转换会增加程序的不确定性
+}
+
+void test_16() {
+  // 一定要成对使用new 和 delete
+}
+
+void test_17() {
+  // 以独立语句创建new对象
+}
+
+void test_18() {
+  // 1. 使设计的接口趋于一致，并且与内置类型的行为兼容。
+  // 2. 组织错误使用的方法包括 建立新类型、限制类型上的操作、束缚类型值、以及消除用户的资源管理责任
+  // 3. shared_ptr 支持定制删除器
+}
+
+void test_19() {
+  // 1. 设计class犹如设计type
+  // 1）新type的对象应该如何被创建和销毁 构造和析构函数 operator new/delete, operator new[]/delete[]
+  // 2）对象的初始化和赋值该有什么样的差别
+  // 3）新type的对象如果被 passed by value 意味着什么
+  // 4）什么是新type的合法值
+  // 5）新type需要配合某个继承图系
+  // 6）新type需要什么样的转换
+  // 7）什么样的操作符和函数对此新type而言是合理的
+  // 8）什么样的标准函数应该驳回
+  // 9）谁该取用新type的成员
+  // 10）什么是新type的成员
+  // 11）新type有多么一般化
+  // 12）真的需要一个type吗
+}
+
+void test_20() {
+  // 以pass-by-reference-to-const传递参数，但不适用于内置类型、stl容器和函数对象。
+}
+
+void test_21() {
+  // 绝不要返回pointer和reference指向一个local stack对象，或返回reference指向一个heap-allocated对象
+  // 或返回pointer或reference指向一个local static对象而有可能同时需要多个这样的对象。
+}
 }  // namespace effective_cxx
 
 int main() {
