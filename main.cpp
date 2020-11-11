@@ -1125,6 +1125,26 @@ void test() {
 }
 }  // namespace test_new_feature
 
+namespace more_effective_cxx {
+void test_01() {
+  // reference 总是指向一个非空的初值，所以在初始化时需要赋值
+  // pointer 指向一个空位置，并且可以改变指向的对象
+}
+
+void test_02() {
+  // static_cast 转型操作
+  // const_cast 去除const或添加const
+  // dynamic_cast 指向基类的派生类 转型为指针 转型失败返回null 转型为引用 转型失败 抛出一个异常
+  // reinterpret_cast 强制转换函数指针
+  // typedef void (*funcptr)(); funcptr funcptrarry[10]; int dosomething();
+  // funcptrarry[0] = reinterpret_cast<funcptr>(&dosomething);
+}
+
+void test_03() {
+  //
+}
+}  // namespace more_effective_cxx
+
 int main() {
   //  tiny_avl_tree::test::test_avl_tree();
   tiny_sort::test::test_sort();
