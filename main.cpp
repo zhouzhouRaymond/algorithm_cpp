@@ -1318,6 +1318,75 @@ void test_21() {
   // 绝不要返回pointer和reference指向一个local stack对象，或返回reference指向一个heap-allocated对象
   // 或返回pointer或reference指向一个local static对象而有可能同时需要多个这样的对象。
 }
+
+void test_22() {
+  // 将成员变量设置为private有助于实现数据一致性 和 访问控制
+  // protected 和 public 的封装性差不太远
+}
+
+void test_23() {
+  // 在 non-member 和 non-friend 和 member 提供相同功能的情况下，以前两者替换后者较为合适
+  // 这样可以增加代码的封装性,减少直接访问内部私有成员的可能
+
+  // 一个较为合适的解决方案是 将工具类分别放在不同的头文件中,但都处于同一个命名空间
+}
+
+void test_24() {
+  // 需要对某个函数的所有参数进行类型转换,应当将其声明为non-member
+  // 比如 operator* 方法声明为non-member则可以进行隐式类型转换
+}
+
+void test_25() {
+  // 当标准库中的swap函数无法高效运作在自制的class上时,需要
+  // 1. 提供一个public swap成员函数,这个函数不该抛出异常
+  // 2. 在自制class的命名空间内部提供一个non-member swap 并调用member swap函数
+
+  // namespace stuff{
+  // class a{
+  //   public:
+  //     void swap(a& other){ using std::swap; swap(d, d);
+  // }
+  // template<>
+  // void swap<a>(a& l, a& r){ a.swap(b); }
+  // }
+
+  // 只能针对std template声明全特化版本
+}
+
+void test_26() {
+  // 非必要不定义变量, 且变量的定义应当在使用之前
+}
+
+void test_27() {
+  // 多态的派生类转换到基类,其实时派生类中基类的部分的副本
+  // 尽量避免复杂的类型转换
+  // 试着将转型操作放进某个函数
+}
+
+void test_28() {
+  // 避免返回指针 引用 迭代器 指向内部对象
+}
+
+void test_29() {
+  // 线程安全的分类
+  // 基本承诺，如果异常抛出，程序内的任何事务仍然保持在有效状态下。
+  // 强烈保证，如果异常被抛出，程序状态不改变 以 copy and swap实现
+  // 不抛异常，承诺绝不抛出异常
+}
+
+void test_30() {
+  // 将函数定义与class内，隐喻的方式说明了函数是inline的
+  // 将大部分inline限制在小型、被频繁调用的函数上，也可使潜在的代码膨胀问题最小化，提高运行速度
+  // inline函数是放置在连接器阶段构建的
+}
+
+void test_31() {
+  // 编译依存性最小化，相依与声明式，而非定义式，常用的两种手段
+  // 1）handle classes
+  // 2）interface classes
+
+  // 程序库头文件应该以“完全且仅有声明式”的形式存在，不论是否设计template
+}
 }  // namespace effective_cxx
 
 int main() {
