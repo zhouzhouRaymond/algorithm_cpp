@@ -1141,7 +1141,12 @@ void test_02() {
 }
 
 void test_03() {
-  //
+  // 1. 避免以具体类继承具体类
+  // 2. 避免以多态的方式处理数组，指针在移动时无法确定的知道下一个位置
+}
+
+void test_04() {
+  // 如非必要，不提供default constructors
 }
 }  // namespace more_effective_cxx
 
