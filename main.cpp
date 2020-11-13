@@ -1387,6 +1387,72 @@ void test_31() {
 
   // 程序库头文件应该以“完全且仅有声明式”的形式存在，不论是否设计template
 }
+
+void test_32() {
+  // public 继承是 is-a 关系，表示派生类是基类的一个特例，基类是较为一般的情形
+}
+
+void test_33() {
+  // public 继承是将 drived类的作用域包含于base class
+  // 避免继承类中的名称与基类中的名称相同
+
+  // 为了让遮掩的名称重现，可使用using 或 转交函数
+  // using base::f; 它会让基类中与此名称相同的函数都暴露可见
+  // class derived : private base{ public: virtual void mf1() { Base::f(); } } 转交函数
+}
+
+void test_34() {
+  // drive 只继承成员函数的接口
+  // 以 纯虚函数 声明基类中的函数
+  // 同时继承函数的接口 和 实现，同时能够覆写他们所继承的实现
+  // 以 虚函数 声明基类中的函数，此函数在基类中有定义，还可以在派生类中重写
+  // 同时继承函数的接口 和 实现，同时不能够覆写他们所继承的实现
+  // 正常声明定义一个函数，则派生类不可以重写
+}
+
+void test_35() {
+  // virtual 函数的替换方案
+  // non-virtual interface 它以public non-virtual 成员函数包裹较低访问性的virtual函数
+  // 将virtual函数替换为 函数指针成员变量
+  // 以function对象成员变量替换virtual函数
+  // 将继承体系中的virtual函数替换为另一个继承体系中的virtual函数
+}
+
+void test_36() {
+  // 绝对不要重新定义继承而来的non-virtual函数
+}
+
+void test_37() {
+  // class Shape {public: virtual void draw(ShapeColor color = Red) const = 0;}
+  // class Circle : public Shape {public: virtual void draw(ShapeColor color) const;}
+  // 当以派生类的对象形式调用此函数时，必须指定参数值
+  // 当以指针的形式调用此对象时，可以不指定参数 动态绑定会从基类继承缺省参数值
+}
+
+void test_38() {
+  // 复合不同于public继承
+  // 复合在应用领域意味着包含一个，在实现领域意味着根据某物实现出
+  // 比如 人有一个姓名 set<class, list<class>> 以list实现class
+}
+
+void test_39() {
+  // private 继承 使得基类中的成员变量都变为private
+  // private 继承有些像38条款中的根据某物实现出，只是借用了基类的特征重新定义派生类的实现
+
+  // 与38条款如何区分
+  // 1. 只有当 derived class 需要访问protected base
+  // class的成员，或需要重新定义继承而来的virtual函数时才选用 private
+  // 2. private 继承的优先级要比 has-a 低
+  // 3. private继承可以造成empty base最优化的效果，可致力于对象尺寸最小化
+}
+
+void test_40() {
+  // 函数调用都是先选择最佳匹配，再查看可访问性
+  // 非必要不使用virtual bases
+  // 如果使用virtual base class，则避免在其中放置数据
+
+  // 以public继承某个interface class 和 private 继承某个协助实现的class 两者相结合
+}
 }  // namespace effective_cxx
 
 int main() {
