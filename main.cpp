@@ -1453,11 +1453,90 @@ void test_40() {
 
   // 以public继承某个interface class 和 private 继承某个协助实现的class 两者相结合
 }
+
+void test_41() {
+  // 运行期多态：在运行时根据动态对象确定调用的内容
+  // 编译器多态：由模板生成调用函数
+  //
+}
+
+void test_42() {
+  // typename 用来表明类型 typename C::const_iterator iter(container.begin())
+  // C::const_iterator 嵌套从属类型名称，需要指明typename
+  // 例外是：
+  // 1. 不可以出现在base classed list内
+  // 2. 不可以出现在成员初始化列表中
+  // typename std::iterator_traits<IterT>::value_type tmp(*iter);
+}
+
+void test_43() {
+  // 在模板编程中,可以使用this-> 或 using base::f 或 base<>::f 指出调用
+}
+
+void test_44() {
+  // 模板会为每种类型创建一个实例,尽量剥离不需要模板的操作
+}
+
+void test_45() {
+  // 成员函数模板生成可以接收所有兼容类型的函数
+  // 只声明泛化的构造函数 或 赋值函数 编译器会自动声明普通版本的构造函数 或 赋值函数
+}
+
+void test_46() {
+  // 进行类型转换时,需要为模板生成非成员函数
+  // 模板不会进行隐式类型转换
+  //
+  // 为了让类型转换可以应用于所有实参上,需要声明non-member函数,为了让此函数自动实例化类,
+  // 需要将此函数声明在class内,并将其定义为friend, 调用定义class外部的辅助函数
+}
+
+void test_47() {
+  // traits classes 使得类型相关信息在编译器可见
+  // 使用重载技术,使得traits class有可能在编译器对类型进行if...else测试
+}
+
+void test_48() {
+  // 模板元编程可将工作由运行期移往编译期
+}
+
+void test_49() {
+  // set_new_handler允许客户指定一个函数,在内存分配无法获得满足时被调用
+  // nothing throw只适用于内存分配,后续的构造函数还是有可能抛出异常
+}
+
+void test_50() {
+  // 定制 new 和 delete
+}
+
+void test_51() {
+  // operator new 应该包含一个无穷的循环，只有在内存分配成功 或 抛出异常时才停止
+  // 并且应当能够处理 0 byte的申请 class 专属版本应当能够处理比正确大小更大的申请
+
+  // operator delete 应当在收到null指针时不做任何事 class的专属版本应当处理比正常大小更大的申请
+}
+
+void test_52() {
+  // 当使用定制版本的operator new 时，也需要提供对应的operator delete 在new失败时，自动调用delete
+  // 当声明定制版本的operator new/delete时，也需要提供正常版本的new/delete
+}
+
+void test_53() {
+  // 避免编译器出现警告信息
+  // 且不要过度依赖编译器的告警功能,有些告警信息更换一个编译器时可能不会出现
+}
+
+void test_54() {
+  // 跟进tr1中的功能实现
+}
+
+void test_55() {
+  // 在boost中获取较新的功能实现
+}
 }  // namespace effective_cxx
 
 int main() {
   //  tiny_avl_tree::test::test_avl_tree();
   //  tiny_sort::test::test_sort();
-  effective_cxx::test_03();
+  //  effective_cxx::test_03();
   return 0;
 }
