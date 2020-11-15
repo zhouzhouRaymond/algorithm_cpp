@@ -1148,6 +1148,82 @@ void test_03() {
 void test_04() {
   // 如非必要，不提供default constructors
 }
+
+void test_05() {
+  // 只有含有单一自变量类型的函数可以成员隐式类型转换函数
+  // 使用explicit修饰构造函数 使此函数避免隐式类型转换
+}
+
+void test_06() {
+  // 前置 和 后置 ++/--
+  // T& operator++(); 前置  累加然后取出 返回的是当前值的引用
+  // const T operator++(int); 后置  取出然后累加 返回的是旧值
+  // T& operator+=(int); +=操作符
+  // 两者的返回值不同
+
+  // 后置累加 以 前置累加为基础
+}
+
+void test_07() {
+  // 不可以重载
+  // && || , . .* :: ?: new delete sizeof typeid static/dynamic/const/reinterpret_cast
+
+  // 可以重载
+  // operator new/new[] operate delete/new[] + - * / % ^ & | ~ ! = < >
+  // +/-/*///%/^/&/|/<</>>/=/!/</>= ++ -- ->* -> () []
+}
+
+void test_08() {
+  // new/delete/new[]/delete[] operator 和 operator new/delete/new[]/delete[] 的区别
+  // 前者为系统内建的语言，实现两个功能 1. 分配原始内存，2. 创建对象
+  // 后者为重载类型,只能实现开辟原始内存的功能
+
+  // placement new/delete/new[]/delete[] 在为初始化的原始内存上创建对象
+  // new (placement of buffer) T(sizeof(T));
+}
+
+void test_09() {
+  // 把资源对象封装在对象内,则可以极大程度上避免资源泄漏
+  // 尽可能多的使用智能指针
+}
+
+void test_10() {
+  // 在构造函数内消除资源泄露的困扰
+  // 以资源管理类的形式管理资源
+}
+
+void test_11() {
+  // 应当在 析构函数 中处理所有异常
+}
+
+void test_12() {
+  // 抛出异常总是会发生拷贝,处理异常时,其实是处理抛出异常的一个副本
+  // 且在处理异常时,总是只考虑异常的静态类型,而忽略异常的动态类型
+  // throw; throw w; 前者抛出的是当前类型, 后者抛出的是当前类型的一个拷贝
+
+  // 应当避免以 pass-by-point 传递异常,因为抛出的异常会在抛出之后析构掉
+
+  // 抛出的异常不存在隐式类型转换
+  // 只存在两种类型转换:
+  // 1. 基类和子类,抛出一个子类的异常可以被基类捕获
+  // 2. 从有型指针 转换为 五型指针
+
+  // 在处理异常时 总时以最先吻合策略处理 而在处理函数时,总是以最佳吻合处理
+}
+
+void test_13() {
+  // 以 pass-by-reference 捕获异常参数
+}
+
+void test_14() {
+  // 不为template提供异常列表
+  // 如果A函数内调用函数B,而B函数无异常列表,那么函数A也不应该设置异常列表
+  // 处理系统可能抛出的异常,最常见的就是bad_alloc,内存分配失败
+}
+
+void test_15() {
+  // 处理异常需要时间和空间成本
+}
 }  // namespace more_effective_cxx
 
 int main() {
