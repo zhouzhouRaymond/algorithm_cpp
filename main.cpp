@@ -1280,6 +1280,75 @@ void test_24() {
 
   // 运行期 取得对象的类型信息 只需要在虚函数表的最上面添加 对象的类型信息指针即可
 }
+
+void test_25() {
+  // 虚化 构造函数 和 non-member函数
+
+  // 复制构造函数：
+  // 例子：有一个链表指向基类的派生类对象，当需要复制此链表时，需要虚化复制构造函数
+  // 有一个可行的例子就是：
+  // virtual base * clone () const = 0;
+  // virtual drived * clone() const{ return new drived(*this); }
+
+  // cout 函数
+  // base class: virtual ostream& print(ostream& s) const = 0;
+  // drived class: virtual ostream& print(ostream& s) const{ }
+  // inline ostream& operator<<(ostream& s, const base& c) { return c.print(s); }
+}
+
+void test_26() {
+  // 限制对象所能产出的对象数量
+  // 单例模式 和 限制模式
+  // 单例模式 在函数内使用 static对象,使其只有在使用时才会初始化 并且只初始化一次
+  // 限制模式 创建一个计数的基类 现在对象生成的最大个数
+}
+
+void test_27() {
+  // 限制对象必须产生于heap内,private/protect ~dtor
+  // 判断对象是否在heap中,operator new 操作符中记录每次new出的地址空间起始位置,
+  // 使用dynamic_cast将类型转换为void* 再与记录的地址比较,则可以判断出是否包含在heap中
+
+  // 禁止对象产生于heap中
+  // 私有化 operator new/delete
+  // 对于含有自己operator new函数的派生类,基类的私有性不具影响
+}
+
+void test_28() {
+  // 智能指针内部不可以提供对原始指针的隐式类型转换
+
+  // 当提供隐式类型转换时，需要特别注意类的多继承
+
+  // non-const to const的类型转换
+}
+
+void test_29() {
+  //
+}
+
+void test_30() {
+  //
+}
+
+void test_31() {
+  //
+}
+
+void test_32() {
+  //
+}
+
+void test_33() {
+  //
+}
+
+void test_34() {
+  //
+}
+
+void test_35() {
+  //
+}
+
 }  // namespace more_effective_cxx
 
 int main() {
