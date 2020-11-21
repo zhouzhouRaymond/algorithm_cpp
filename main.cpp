@@ -1326,29 +1326,23 @@ void test_29() {
 }
 
 void test_30() {
-  // 代理类的实现
+  // 代理类的运用
+  // 1. 多维数组
+  // 2. 读取 或 写入
+  // 3. 压抑隐式类型转换
 }
 
 void test_31() {
-  //
+  // 根据一个以上的类型 指定函数的虚化行为
 }
 
-void test_32() {
-  //
-}
+void test_32() {}
 
-void test_33() {
-  //
-}
+void test_33() {}
 
-void test_34() {
-  //
-}
+void test_34() {}
 
-void test_35() {
-  //
-}
-
+void test_35() {}
 }  // namespace more_effective_cxx
 
 int main() {
