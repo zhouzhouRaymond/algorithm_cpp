@@ -1754,6 +1754,12 @@ void test_34() {}
 void test_35() {}
 }  // namespace more_effective_cxx
 
+namespace object_model {
+void test_01() {
+  //
+}
+}  // namespace object_model
+
 int main() {
   //  tiny_avl_tree::test::test_avl_tree();
   //  tiny_sort::test::test_sort();
