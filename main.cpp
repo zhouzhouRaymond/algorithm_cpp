@@ -1534,6 +1534,226 @@ void test_55() {
 }
 }  // namespace effective_cxx
 
+namespace more_effective_cxx {
+void test_01() {
+  // reference 总是指向一个非空的初值，所以在初始化时需要赋值
+  // pointer 指向一个空位置，并且可以改变指向的对象
+}
+
+void test_02() {
+  // static_cast 转型操作
+  // const_cast 去除const或添加const
+  // dynamic_cast 指向基类的派生类 转型为指针 转型失败返回null 转型为引用 转型失败 抛出一个异常
+  // reinterpret_cast 强制转换函数指针
+  // typedef void (*funcptr)(); funcptr funcptrarry[10]; int dosomething();
+  // funcptrarry[0] = reinterpret_cast<funcptr>(&dosomething);
+}
+
+void test_03() {
+  // 1. 避免以具体类继承具体类
+  // 2. 避免以多态的方式处理数组，指针在移动时无法确定的知道下一个位置
+}
+
+void test_04() {
+  // 如非必要，不提供default constructors
+}
+
+void test_05() {
+  // 只有含有单一自变量类型的函数可以成员隐式类型转换函数
+  // 使用explicit修饰构造函数 使此函数避免隐式类型转换
+}
+
+void test_06() {
+  // 前置 和 后置 ++/--
+  // T& operator++(); 前置  累加然后取出 返回的是当前值的引用
+  // const T operator++(int); 后置  取出然后累加 返回的是旧值
+  // T& operator+=(int); +=操作符
+  // 两者的返回值不同
+
+  // 后置累加 以 前置累加为基础
+}
+
+void test_07() {
+  // 不可以重载
+  // && || , . .* :: ?: new delete sizeof typeid static/dynamic/const/reinterpret_cast
+
+  // 可以重载
+  // operator new/new[] operate delete/new[] + - * / % ^ & | ~ ! = < >
+  // +/-/*///%/^/&/|/<</>>/=/!/</>= ++ -- ->* -> () []
+}
+
+void test_08() {
+  // new/delete/new[]/delete[] operator 和 operator new/delete/new[]/delete[] 的区别
+  // 前者为系统内建的语言，实现两个功能 1. 分配原始内存，2. 创建对象
+  // 后者为重载类型,只能实现开辟原始内存的功能
+
+  // placement new/delete/new[]/delete[] 在为初始化的原始内存上创建对象
+  // new (placement of buffer) T(sizeof(T));
+}
+
+void test_09() {
+  // 把资源对象封装在对象内,则可以极大程度上避免资源泄漏
+  // 尽可能多的使用智能指针
+}
+
+void test_10() {
+  // 在构造函数内消除资源泄露的困扰
+  // 以资源管理类的形式管理资源
+}
+
+void test_11() {
+  // 应当在 析构函数 中处理所有异常
+}
+
+void test_12() {
+  // 抛出异常总是会发生拷贝,处理异常时,其实是处理抛出异常的一个副本
+  // 且在处理异常时,总是只考虑异常的静态类型,而忽略异常的动态类型
+  // throw; throw w; 前者抛出的是当前类型, 后者抛出的是当前类型的一个拷贝
+
+  // 应当避免以 pass-by-point 传递异常,因为抛出的异常会在抛出之后析构掉
+
+  // 抛出的异常不存在隐式类型转换
+  // 只存在两种类型转换:
+  // 1. 基类和子类,抛出一个子类的异常可以被基类捕获
+  // 2. 从有型指针 转换为 五型指针
+
+  // 在处理异常时 总时以最先吻合策略处理 而在处理函数时,总是以最佳吻合处理
+}
+
+void test_13() {
+  // 以 pass-by-reference 捕获异常参数
+}
+
+void test_14() {
+  // 不为template提供异常列表
+  // 如果A函数内调用函数B,而B函数无异常列表,那么函数A也不应该设置异常列表
+  // 处理系统可能抛出的异常,最常见的就是bad_alloc,内存分配失败
+}
+
+void test_15() {
+  // 处理异常需要时间和空间成本
+}
+
+void test_16() {
+  // 80 - 20 法则
+  // 使用性能分析器 尽可能多的使用不同的数据分析程序性能
+}
+
+void test_17() {
+  // 缓式评估
+  // 引用计数 当程序确切的需要修改自身数据时，才私有化数据，否则采用引用计数的方式处理数据
+  // 区分读和写
+  // 表达式缓式评估 只在需要真正使用表达式值的时候才计算使用的那部分
+}
+
+void test_18() {
+  // 超急式评估 考虑到程序需要使用某值时，分摊计算此值的成本，比如 数据的平均值，最大值，最小值
+  // 缓存技术
+  // 预先取出 比如 在动态数组中每次分配比需求大的空间
+}
+
+void test_19() {
+  // 临时对象：1. 隐式类型转换 2. 函数返回对象
+  // const reference 会产生临时对象 non-const reference 则不会产生历史对象
+  // 针对函数返回对象所产生的临时对象，可采用返回值优化
+}
+
+void test_20() {
+  // 函数必须要返回对象时
+  // inline const T operator *(const T& lhs, const T& rhs){ return T(lhs * rhs); }
+  // 编译器内部优化了函数返回值的构造和析构成本，使此临时对象的在接收返回值的对象内部构造
+}
+
+void test_21() {
+  // 使用重载技术，为函数指明参数类型，避免隐式类型转换
+  // T a = b * c; b, c is a T
+  // T a = b * c; b is a T, c is not a T
+  // 不指明参数类型时，c会进行隐式类型转换
+  // 且在重载操作符时，必须有一个参数是用户自定义的类型
+}
+
+void test_22() {
+  // 通过操作符的符合版本实现独身版本
+  // + - += -+
+}
+
+void test_23() {
+  // 使用不同的程序库
+}
+
+void test_24() {
+  // 无法将虚函数声明为inline，因为inline函数，在编译器就知道了函数调用，而virtual函数只有在运行期才知道
+  // 在单一继承中，对象的布局只是增加了一个vptr成本
+  // 在多继承中，因为virtual base基类的问题，需要要中间类指定 pointer to virtual base class
+  // 并把base class的成员放到最下方
+
+  // 运行期 取得对象的类型信息 只需要在虚函数表的最上面添加 对象的类型信息指针即可
+}
+
+void test_25() {
+  // 虚化 构造函数 和 non-member函数
+
+  // 复制构造函数：
+  // 例子：有一个链表指向基类的派生类对象，当需要复制此链表时，需要虚化复制构造函数
+  // 有一个可行的例子就是：
+  // virtual base * clone () const = 0;
+  // virtual drived * clone() const{ return new drived(*this); }
+
+  // cout 函数
+  // base class: virtual ostream& print(ostream& s) const = 0;
+  // drived class: virtual ostream& print(ostream& s) const{ }
+  // inline ostream& operator<<(ostream& s, const base& c) { return c.print(s); }
+}
+
+void test_26() {
+  // 限制对象所能产出的对象数量
+  // 单例模式 和 限制模式
+  // 单例模式 在函数内使用 static对象,使其只有在使用时才会初始化 并且只初始化一次
+  // 限制模式 创建一个计数的基类 现在对象生成的最大个数
+}
+
+void test_27() {
+  // 限制对象必须产生于heap内,private/protect ~dtor
+  // 判断对象是否在heap中,operator new 操作符中记录每次new出的地址空间起始位置,
+  // 使用dynamic_cast将类型转换为void* 再与记录的地址比较,则可以判断出是否包含在heap中
+
+  // 禁止对象产生于heap中
+  // 私有化 operator new/delete
+  // 对于含有自己operator new函数的派生类,基类的私有性不具影响
+}
+
+void test_28() {
+  // 智能指针内部不可以提供对原始指针的隐式类型转换
+
+  // 当提供隐式类型转换时，需要特别注意类的多继承
+
+  // non-const to const的类型转换
+}
+
+void test_29() {
+  // 引用计数的实现
+}
+
+void test_30() {
+  // 代理类的运用
+  // 1. 多维数组
+  // 2. 读取 或 写入
+  // 3. 压抑隐式类型转换
+}
+
+void test_31() {
+  // 根据一个以上的类型 指定函数的虚化行为
+}
+
+void test_32() {}
+
+void test_33() {}
+
+void test_34() {}
+
+void test_35() {}
+}  // namespace more_effective_cxx
+
 int main() {
   //  tiny_avl_tree::test::test_avl_tree();
   //  tiny_sort::test::test_sort();
