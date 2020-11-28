@@ -1756,7 +1756,35 @@ void test_35() {}
 
 namespace object_model {
 void test_01() {
+  // 关于对象
+}
+
+void test_02() {
   //
+}
+
+void test_03() {
+  // 空结构体
+  class A {};
+  class B : public virtual A {};
+  class C : public virtual A {};
+  class D : public B, public C {};
+  std::cout << sizeof(A) << std::endl;  // 1
+  std::cout << sizeof(B) << std::endl;  // 8
+  std::cout << sizeof(C) << std::endl;  // 8
+  std::cout << sizeof(D) << std::endl;  // 16
+
+  // 类成员变量的偏移
+  class E {
+   public:
+    int a, b, c;
+  };
+
+  printf("a = %p\n", &E::a);
+  printf("b = %p\n", &E::b);
+  printf("c = %p\n", &E::c);
+
+  if (&E::a == 0) std::cout << "1" << std::endl;
 }
 }  // namespace object_model
 
@@ -1764,5 +1792,7 @@ int main() {
   //  tiny_avl_tree::test::test_avl_tree();
   //  tiny_sort::test::test_sort();
   //  effective_cxx::test_03();
+
+  //  object_model::test_03();
   return 0;
 }
