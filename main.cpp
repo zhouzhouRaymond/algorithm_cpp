@@ -1786,6 +1786,8 @@ void test_03() {
 
   if (&E::a == 0) std::cout << "1" << std::endl;
 }
+
+void test_04() {}
 }  // namespace object_model
 
 int main() {
