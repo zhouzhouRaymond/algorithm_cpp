@@ -72,13 +72,9 @@ License (MIT):
 namespace dbg {
 
 #ifdef DBG_MACRO_UNIX
-inline bool isColorizedOutputEnabled() {
-  return isatty(fileno(stderr));
-}
+inline bool isColorizedOutputEnabled() { return isatty(fileno(stderr)); }
 #else
-inline bool isColorizedOutputEnabled() {
-  return true;
-}
+inline bool isColorizedOutputEnabled() { return true; }
 #endif
 
 struct time {};
@@ -90,18 +86,15 @@ namespace pretty_function {
 
 #if defined(__clang__)
 #define DBG_MACRO_PRETTY_FUNCTION __PRETTY_FUNCTION__
-static constexpr size_t PREFIX_LENGTH =
-    sizeof("const char *dbg::type_name_impl() [T = ") - 1;
+static constexpr size_t PREFIX_LENGTH = sizeof("const char *dbg::type_name_impl() [T = ") - 1;
 static constexpr size_t SUFFIX_LENGTH = sizeof("]") - 1;
 #elif defined(__GNUC__) && !defined(__clang__)
 #define DBG_MACRO_PRETTY_FUNCTION __PRETTY_FUNCTION__
-static constexpr size_t PREFIX_LENGTH =
-    sizeof("const char* dbg::type_name_impl() [with T = ") - 1;
+static constexpr size_t PREFIX_LENGTH = sizeof("const char* dbg::type_name_impl() [with T = ") - 1;
 static constexpr size_t SUFFIX_LENGTH = sizeof("]") - 1;
 #elif defined(_MSC_VER)
 #define DBG_MACRO_PRETTY_FUNCTION __FUNCSIG__
-static constexpr size_t PREFIX_LENGTH =
-    sizeof("const char *__cdecl dbg::type_name_impl<") - 1;
+static constexpr size_t PREFIX_LENGTH = sizeof("const char *__cdecl dbg::type_name_impl<") - 1;
 static constexpr size_t SUFFIX_LENGTH = sizeof(">(void)") - 1;
 #else
 #error "This compiler is currently not supported by dbg_macro."
@@ -113,11 +106,9 @@ static constexpr size_t SUFFIX_LENGTH = sizeof(">(void)") - 1;
 
 template <typename T>
 struct print_formatted {
-  static_assert(std::is_integral<T>::value,
-                "Only integral types are supported.");
+  static_assert(std::is_integral<T>::value, "Only integral types are supported.");
 
-  print_formatted(T value, int numeric_base)
-      : inner(value), base(numeric_base) {}
+  print_formatted(T value, int numeric_base) : inner(value), base(numeric_base) {}
 
   operator T() const { return inner; }
 
@@ -168,8 +159,7 @@ std::string get_type_name(type_tag<T>) {
   namespace pf = pretty_function;
 
   std::string type = type_name_impl<T>();
-  return type.substr(pf::PREFIX_LENGTH,
-                     type.size() - pf::PREFIX_LENGTH - pf::SUFFIX_LENGTH);
+  return type.substr(pf::PREFIX_LENGTH, type.size() - pf::PREFIX_LENGTH - pf::SUFFIX_LENGTH);
 }
 
 template <typename T>
@@ -200,25 +190,15 @@ std::string type_name() {
   return get_type_name(type_tag<T>{});
 }
 
-inline std::string get_type_name(type_tag<short>) {
-  return "short";
-}
+inline std::string get_type_name(type_tag<short>) { return "short"; }
 
-inline std::string get_type_name(type_tag<unsigned short>) {
-  return "unsigned short";
-}
+inline std::string get_type_name(type_tag<unsigned short>) { return "unsigned short"; }
 
-inline std::string get_type_name(type_tag<long>) {
-  return "long";
-}
+inline std::string get_type_name(type_tag<long>) { return "long"; }
 
-inline std::string get_type_name(type_tag<unsigned long>) {
-  return "unsigned long";
-}
+inline std::string get_type_name(type_tag<unsigned long>) { return "unsigned long"; }
 
-inline std::string get_type_name(type_tag<std::string>) {
-  return "std::string";
-}
+inline std::string get_type_name(type_tag<std::string>) { return "std::string"; }
 
 template <typename T>
 std::string get_type_name(type_tag<std::vector<T, std::allocator<T>>>) {
@@ -267,11 +247,7 @@ struct nonesuch {
 template <typename...>
 using void_t = void;
 
-template <class Default,
-          class AlwaysVoid,
-          template <class...>
-          class Op,
-          class... Args>
+template <class Default, class AlwaysVoid, template <class...> class Op, class... Args>
 struct detector {
   using value_t = std::false_type;
   using type = Default;
@@ -286,8 +262,8 @@ struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
 }  // namespace detail_detector
 
 template <template <class...> class Op, class... Args>
-using is_detected = typename detail_detector::
-    detector<detail_detector::nonesuch, void, Op, Args...>::value_t;
+using is_detected =
+    typename detail_detector::detector<detail_detector::nonesuch, void, Op, Args...>::value_t;
 
 namespace detail {
 
@@ -320,17 +296,14 @@ using detect_size_t = decltype(detail::size(std::declval<T>()));
 template <typename T>
 struct is_container {
   static constexpr bool value =
-      is_detected<detect_begin_t, T>::value &&
-      is_detected<detect_end_t, T>::value &&
+      is_detected<detect_begin_t, T>::value && is_detected<detect_end_t, T>::value &&
       is_detected<detect_size_t, T>::value &&
       !std::is_same<std::string,
-                    typename std::remove_cv<
-                        typename std::remove_reference<T>::type>::type>::value;
+                    typename std::remove_cv<typename std::remove_reference<T>::type>::type>::value;
 };
 
 template <typename T>
-using ostream_operator_t =
-    decltype(std::declval<std::ostream&>() << std::declval<T>());
+using ostream_operator_t = decltype(std::declval<std::ostream&>() << std::declval<T>());
 
 template <typename T>
 struct has_ostream_operator : is_detected<ostream_operator_t, T> {};
@@ -360,12 +333,10 @@ inline void pretty_print(std::ostream&, const T&, std::false_type) {
 }
 
 template <typename T>
-inline typename std::enable_if<!detail::is_container<const T&>::value &&
-                                   !std::is_enum<T>::value,
+inline typename std::enable_if<!detail::is_container<const T&>::value && !std::is_enum<T>::value,
                                bool>::type
 pretty_print(std::ostream& stream, const T& value) {
-  pretty_print(stream, value,
-               typename detail::has_ostream_operator<const T&>::type{});
+  pretty_print(stream, value, typename detail::has_ostream_operator<const T&>::type{});
   return true;
 }
 
@@ -380,8 +351,8 @@ inline bool pretty_print(std::ostream& stream, const char& value) {
   if (printable) {
     stream << "'" << value << "'";
   } else {
-    stream << "'\\x" << std::setw(2) << std::setfill('0') << std::hex
-           << std::uppercase << (0xFF & value) << "'";
+    stream << "'\\x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase
+           << (0xFF & value) << "'";
   }
   return true;
 }
@@ -397,8 +368,7 @@ inline bool pretty_print(std::ostream& stream, P* const& value) {
 }
 
 template <typename T, typename Deleter>
-inline bool pretty_print(std::ostream& stream,
-                         std::unique_ptr<T, Deleter>& value) {
+inline bool pretty_print(std::ostream& stream, std::unique_ptr<T, Deleter>& value) {
   pretty_print(stream, value.get());
   return true;
 }
@@ -462,12 +432,11 @@ inline bool pretty_print(std::ostream& stream, const time&) {
   using namespace std::chrono;
 
   const auto now = system_clock::now();
-  const auto us =
-      duration_cast<microseconds>(now.time_since_epoch()).count() % 1000000;
+  const auto us = duration_cast<microseconds>(now.time_since_epoch()).count() % 1000000;
   const auto hms = system_clock::to_time_t(now);
   const std::tm* tm = std::localtime(&hms);
-  stream << "current time = " << std::put_time(tm, "%H:%M:%S") << '.'
-         << std::setw(6) << std::setfill('0') << us;
+  stream << "current time = " << std::put_time(tm, "%H:%M:%S") << '.' << std::setw(6)
+         << std::setfill('0') << us;
 
   return false;
 }
@@ -488,8 +457,7 @@ std::string decimalToBinary(T n) {
 }
 
 template <typename T>
-inline bool pretty_print(std::ostream& stream,
-                         const print_formatted<T>& value) {
+inline bool pretty_print(std::ostream& stream, const print_formatted<T>& value) {
   if (value.inner < 0) {
     stream << "-";
   }
@@ -497,8 +465,8 @@ inline bool pretty_print(std::ostream& stream,
 
   // Print using setbase
   if (value.base != 2) {
-    stream << std::setw(sizeof(T)) << std::setfill('0')
-           << std::setbase(value.base) << std::uppercase;
+    stream << std::setw(sizeof(T)) << std::setfill('0') << std::setbase(value.base)
+           << std::uppercase;
 
     if (value.inner >= 0) {
       // The '+' sign makes sure that a uint_8 is printed as a number
@@ -513,8 +481,7 @@ inline bool pretty_print(std::ostream& stream,
       stream << decimalToBinary(value.inner);
     } else {
       using unsigned_type = typename std::make_unsigned<T>::type;
-      stream << decimalToBinary<unsigned_type>(
-          static_cast<unsigned_type>(-(value.inner + 1)) + 1);
+      stream << decimalToBinary<unsigned_type>(static_cast<unsigned_type>(-(value.inner + 1)) + 1);
     }
   }
 
@@ -546,8 +513,7 @@ inline bool pretty_print(std::ostream& stream, const print_type<T>&) {
 }
 
 template <typename Container>
-inline typename std::enable_if<detail::is_container<const Container&>::value,
-                               bool>::type
+inline typename std::enable_if<detail::is_container<const Container&>::value, bool>::type
 pretty_print(std::ostream& stream, const Container& value) {
   stream << "{";
   const size_t size = detail::size(value);
@@ -572,8 +538,8 @@ pretty_print(std::ostream& stream, const Container& value) {
 }
 
 template <typename Enum>
-inline typename std::enable_if<std::is_enum<Enum>::value, bool>::type
-pretty_print(std::ostream& stream, Enum const& value) {
+inline typename std::enable_if<std::is_enum<Enum>::value, bool>::type pretty_print(
+    std::ostream& stream, Enum const& value) {
   using UnderlyingType = typename std::underlying_type<Enum>::type;
   stream << static_cast<UnderlyingType>(value);
 
@@ -611,8 +577,7 @@ inline bool pretty_print(std::ostream& stream, const std::optional<T>& value) {
 }
 
 template <typename... Ts>
-inline bool pretty_print(std::ostream& stream,
-                         const std::variant<Ts...>& value) {
+inline bool pretty_print(std::ostream& stream, const std::variant<Ts...>& value) {
   stream << "{";
   std::visit([&stream](auto&& arg) { pretty_print(stream, arg); }, value);
   stream << "}";
@@ -624,10 +589,7 @@ inline bool pretty_print(std::ostream& stream,
 
 class DebugOutput {
  public:
-  DebugOutput(const char* filepath,
-              int line,
-              const char* function_name,
-              const char* expression)
+  DebugOutput(const char* filepath, int line, const char* function_name, const char* expression)
       : m_use_colorized_output(isColorizedOutputEnabled()),
         m_filepath(filepath),
         m_line(line),
@@ -635,8 +597,7 @@ class DebugOutput {
         m_expression(expression) {
     const std::size_t path_length = m_filepath.length();
     if (path_length > MAX_PATH_LENGTH) {
-      m_filepath = ".." + m_filepath.substr(path_length - MAX_PATH_LENGTH,
-                                            MAX_PATH_LENGTH);
+      m_filepath = ".." + m_filepath.substr(path_length - MAX_PATH_LENGTH, MAX_PATH_LENGTH);
     }
   }
 
@@ -647,11 +608,10 @@ class DebugOutput {
     const bool print_expr_and_type = pretty_print(stream_value, ref);
 
     std::stringstream output;
-    output << ansi(ANSI_DEBUG) << "[" << m_filepath << ":" << m_line << " ("
-           << m_function_name << ")] " << ansi(ANSI_RESET);
+    output << ansi(ANSI_DEBUG) << "[" << m_filepath << ":" << m_line << " (" << m_function_name
+           << ")] " << ansi(ANSI_RESET);
     if (print_expr_and_type) {
-      output << ansi(ANSI_EXPRESSION) << m_expression << ansi(ANSI_RESET)
-             << " = ";
+      output << ansi(ANSI_EXPRESSION) << m_expression << ansi(ANSI_RESET) << " = ";
     }
     output << ansi(ANSI_VALUE) << stream_value.str() << ansi(ANSI_RESET);
     if (print_expr_and_type) {

@@ -1,4 +1,4 @@
-Language:        Cpp
-BasedOnStyle:  Google
+Language: Cpp
+BasedOnStyle: Google
 DerivePointerAlignment: false
 ColumnLimit: 100
